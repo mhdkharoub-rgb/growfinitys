@@ -1,0 +1,13 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root{ color-scheme: dark; }
+body{ @apply bg-black text-white; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; }
+.btn-gold{ @apply rounded-lg px-6 py-3 font-semibold text-black shadow-lg; background-image: linear-gradient(90deg,#FFD700,#D4AF37); }
+.btn-gold-outline{ @apply rounded-lg px-6 py-3 font-semibold text-goldLight border border-goldDeep; background-color: transparent; }
+.card{ @apply bg-black/40 border border-goldDeep/30 rounded-2xl p-6 backdrop-blur; }
+.badge{ @apply inline-block text-xs tracking-wide uppercase bg-goldDeep/20 border border-goldDeep/50 text-goldLight rounded-full px-3 py-1; }
+.nav-link{ @apply text-sm text-white/80 hover:text-white transition; }
+.footer-link{ @apply text-white/70 hover:text-white transition; }
