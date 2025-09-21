@@ -59,9 +59,3 @@ export default function Pricing() {
   );
 }
 
-<a 
-  data-ms-membership="pln_free-trial-hbo80nkf" 
-  className="btn-gold"
->
-  Join Free Trial
-</a>
