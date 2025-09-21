@@ -10,7 +10,7 @@ export default function Dashboard() {
       <div className="mt-8 card">
         <h2 className="text-xl font-semibold">Free Sample Pack</h2>
         <a
-          href="YOUR_DRIVE_LINK_TO_FREE_SAMPLE"
+          href="https://drive.google.com/drive/folders/1v5B394mmUshdFyXQ0rjDrVE2PlGpMyLl?usp=drive_link"
           className="btn-gold mt-4 inline-block"
           target="_blank"
           rel="noreferrer"
