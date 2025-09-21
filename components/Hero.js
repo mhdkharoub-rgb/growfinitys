@@ -15,3 +15,6 @@ export default function Hero(){
     </section>
   )
 }
+<a data-ms-membership="pln_free-ai-content-pack-x8l20p8s" className="btn-gold">
+  Join Free Trial
+</a>
