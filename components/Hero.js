@@ -17,9 +17,10 @@ export default function Hero(){
 }
 
 <a 
-  data-ms-membership="pln_free-trial-hbo80nkf" 
-  className="btn-gold"
+  className="btn-gold" 
+  data-ms-membership="pln_free-trial-hbo80nkf"
 >
   Join Free Trial
 </a>
+
 
