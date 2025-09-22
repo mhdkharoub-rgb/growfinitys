@@ -22,3 +22,4 @@ export default function Hero(){
 >
   Join Free Trial
 </a>
+
