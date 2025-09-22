@@ -7,7 +7,7 @@ export default function Document() {
         {/* Memberstack MUST use your PUBLIC KEY (pk_...), not app_ */}
         <script
           src="https://api.memberstack.io/static/memberstack.js?custom"
-          data-memberstack-id="pk_b11e99cdfec26904e3e0"
+          data-memberstack-id="app_cmfpuki7k01750wwsgi71cena"
           async
         ></script>
       </Head>
