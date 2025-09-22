@@ -20,7 +20,7 @@ export default function Home(){
             <h3 className="text-2xl font-bold">Download the Free AI Content Pack</h3>
             <p className="text-white/80 mt-2">Get 5 sample posts + images. See the quality before you join.</p>
           </div>
-          <a className="btn-gold" href="YOUR_DEMO_PACK_LINK" target="_blank" rel="noreferrer">📥 Get the Free Pack</a>
+          <a className="btn-gold" href="https://drive.google.com/drive/folders/1v5B394mmUshdFyXQ0rjDrVE2PlGpMyLl?usp=drive_link" target="_blank" rel="noreferrer">📥 Get the Free Pack</a>
         </div>
       </section>
       <FAQ />
