@@ -4,10 +4,10 @@ export default function Document() {
   return (
     <Html lang="en">
       <Head>
-        {/* Memberstack MUST use your PUBLIC KEY (pk_...), not app_ */}
+        {/* Memberstack script */}
         <script
           src="https://api.memberstack.io/static/memberstack.js?custom"
-          data-memberstack-id="app_cmfpuki7k01750wwsgi71cena"
+          data-memberstack-id="pk_b11e99cdfec26904e3e0"
           async
         ></script>
       </Head>
