@@ -6,7 +6,7 @@ import Testimonials from '../components/Testimonials'
 import FAQ from '../components/FAQ'
 import Footer from '../components/Footer'
 
-export default function Home(){
+export default function Home() {
   return (
     <main>
       <Navbar />
@@ -23,7 +23,6 @@ export default function Home(){
               Get 5 sample posts + images. See the quality before you join.
             </p>
           </div>
-          {/* Link to /dashboard instead of Google Drive */}
           <a className="btn-gold" href="/dashboard">
             📥 Get the Free Pack
           </a>
