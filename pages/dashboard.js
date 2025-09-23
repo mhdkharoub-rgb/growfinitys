@@ -9,7 +9,6 @@ export default function Dashboard() {
         Welcome to Growfinitys 🚀 Below is your free sample pack.
       </p>
 
-      {/* Button goes to Google Drive file */}
       <a
         href="https://drive.google.com/file/d/1vWnoS3B-khKTV8NMMeBsiiQi-GFKU4mF/view?usp=sharing"
         target="_blank"
@@ -19,5 +18,5 @@ export default function Dashboard() {
         Download Free Pack
       </a>
     </main>
-  );
+  )
 }
