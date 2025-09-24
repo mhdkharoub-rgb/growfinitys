@@ -80,7 +80,14 @@ export default function Pricing() {
       {/* Free Trial CTA (Nas.io signup) */}
       <div className="text-center mt-10">
         <a
-          href="https://nas.io/your-org/signup?plan=FREE_LINK"
+          href="<iframe
+      title="GROWFINITY checkout widget"
+      src="https://nas.io/checkout-widget?communityCode=GROWFINITY&communitySlug=%2Fgrowfinitys&buttonText=Join%20Now&buttonTextColorHex=%23000&buttonBgColorHex=%23fccb1d&widgetTheme=light&backgroundColorHex=%23fff"
+      width="100%"
+      height="320"
+      frameborder="0"
+      referrerpolicy="no-referrer"
+    ></iframe>"
           className="btn-gold inline-block"
         >
           Join Free Trial
