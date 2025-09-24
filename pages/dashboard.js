@@ -10,7 +10,7 @@ export default function Dashboard() {
       </p>
 
       <a
-        href="https://drive.google.com/file/d/1vWnoS3B-khKTV8NMMeBsiiQi-GFKU4mF/view?usp=sharing"
+        href="https://drive.google.com/drive/folders/1A8G_SdZTCPVABZEFlQzfcIZcQi9iE-IL?usp=drive_link"
         target="_blank"
         rel="noreferrer"
         className="btn-gold inline-block px-6 py-3 rounded-lg font-semibold text-white bg-gradient-to-r from-yellow-500 to-yellow-700 hover:opacity-90 transition"
