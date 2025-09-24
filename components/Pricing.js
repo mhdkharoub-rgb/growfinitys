@@ -21,41 +21,71 @@ const tiers = [
 ];
 
 export default function Pricing() {
-  const success = encodeURIComponent(process.env.NEXT_PUBLIC_SUCCESS_URL);
-  const cancel = encodeURIComponent(process.env.NEXT_PUBLIC_CANCEL_URL);
-
-  const buyUrl = (variantId) =>
-    `https://store.lemonsqueezy.com/checkout/buy/${variantId}?checkout[success_url]=${success}&checkout[cancel_url]=${cancel}&embed=1`;
-
   return (
     <section id="pricing" className="max-w-6xl mx-auto px-4 py-16">
-      <h2 className="text-3xl font-bold mb-8">Pricing</h2>
+      <h2 className="text-3xl font-bold mb-10 text-white text-center">Choose your plan</h2>
+
       <div className="grid md:grid-cols-3 gap-6">
-        {tiers.map((t, i) => (
-          <div key={i} className={`card ${t.popular ? 'border-2 border-goldDeep' : ''}`}>
-            {t.popular && <div className="badge mb-3">Most Popular</div>}
-            <h3 className="text-2xl font-semibold">{t.name}</h3>
-            <p
-              className="text-3xl mt-2 bg-clip-text text-transparent"
-              style={{ backgroundImage: 'linear-gradient(90deg,#FFD700,#D4AF37)' }}
-            >
-              {t.price}
-            </p>
-            <ul className="mt-4 space-y-2 text-white/80">
-              {t.features.map((f, idx) => <li key={idx}>• {f}</li>)}
-            </ul>
-            <a
-              href={buyUrl(t.variantId)}
-              className="btn-gold mt-6 inline-block"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Choose {t.name}
-            </a>
-          </div>
-        ))}
+        {/* Basic */}
+        <div className="card p-6">
+          <h3 className="text-xl font-bold text-white">Basic</h3>
+          <p className="text-white/70 mt-2">$19 / month</p>
+          <ul className="text-white/70 mt-4 space-y-2">
+            <li>30 posts/month (captions + images)</li>
+            <li>Content calendar</li>
+          </ul>
+          <a
+            href="https://nas.io/growfinitys/zerolink/basic"
+            className="btn-gold mt-6 inline-block"
+          >
+            Get Basic
+          </a>
+        </div>
+
+        {/* Pro */}
+        <div className="card p-6 border border-yellow-600">
+          <h3 className="text-xl font-bold text-white">Pro</h3>
+          <p className="text-white/70 mt-2">$49 / month</p>
+          <ul className="text-white/70 mt-4 space-y-2">
+            <li>100 posts/month</li>
+            <li>4 blog ideas, 2 ad copies</li>
+            <li>Hashtag suggestions</li>
+          </ul>
+          <a
+            href="https://nas.io/growfinitys/zerolink/pro"
+            className="btn-gold mt-6 inline-block"
+          >
+            Get Pro
+          </a>
+        </div>
+
+        {/* VIP */}
+        <div className="card p-6">
+          <h3 className="text-xl font-bold text-white">VIP</h3>
+          <p className="text-white/70 mt-2">$99 / month</p>
+          <ul className="text-white/70 mt-4 space-y-2">
+            <li>100 posts + 10 blog ideas</li>
+            <li>5 ad copies, 4 email campaigns</li>
+            <li>Priority niche support + Caption Generator</li>
+          </ul>
+          <a
+            href="https://nas.io/growfinitys/zerolink/vip"
+            className="btn-gold mt-6 inline-block"
+          >
+            Get VIP
+          </a>
+        </div>
+      </div>
+
+      {/* Free Trial CTA (Nas.io signup) */}
+      <div className="text-center mt-10">
+        <a
+          href="https://nas.io/your-org/signup?plan=FREE_LINK"
+          className="btn-gold inline-block"
+        >
+          Join Free Trial
+        </a>
       </div>
     </section>
   );
 }
-
