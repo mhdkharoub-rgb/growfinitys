@@ -17,10 +17,10 @@ export default function Dashboard({ plan }) {
 
   // Master "LATEST" links
   const driveLinks = {
-    free: "https://drive.google.com/drive/folders/FREE_LATEST_LINK",
-    basic: "https://drive.google.com/drive/folders/BASIC_LATEST_LINK",
-    pro: "https://drive.google.com/drive/folders/PRO_LATEST_LINK",
-    vip: "https://drive.google.com/drive/folders/VIP_LATEST_LINK",
+    free: "https://drive.google.com/drive/folders/1A8G_SdZTCPVABZEFlQzfcIZcQi9iE-IL?usp=drive_link",
+    basic: "https://drive.google.com/drive/folders/1wTRvUa-G1jO16ubXCeZdnAKzEmRnzPNG?usp=drive_link",
+    pro: "https://drive.google.com/drive/folders/1_vBFkULww1XPkNF4Xv2xbA3xWuHfVkov?usp=drive_link",
+    vip: "https://drive.google.com/drive/folders/1NZbIvMtXKqRSSONawdqRFfzQjRHMvNzy?usp=drive_link",
   };
 
   return (
