@@ -1,4 +1,15 @@
+import { useEffect, useState } from "react"
+
 export default function Dashboard() {
+  const [isClient, setIsClient] = useState(false)
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  if (!isClient) return null
+
+  // 🔒 Simple auth check using Nas.io SDK
   if (typeof window !== "undefined" && !window.Nas?.io?.isLoggedIn()) {
     return (
       <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
@@ -14,25 +25,38 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white px-6 py-16">
-      <h1 className="text-3xl font-bold mb-4">📊 Growfinitys Trading Dashboard</h1>
-      <p className="mb-6">Here you’ll find today’s signals & reports.</p>
+    <div className="min-h-screen bg-black text-white py-16 px-6">
+      <div className="max-w-4xl mx-auto">
+        {/* 👋 Welcome Message */}
+        <h1 className="text-3xl font-bold mb-4">👋 Welcome back to Growfinitys!</h1>
+        <p className="text-white/70 mb-6">
+          You’re logged in via Nas.io. Here’s today’s market insights and signals:
+        </p>
 
-      <div className="bg-gray-800 p-6 rounded-lg mb-6">
-        <h2 className="text-2xl mb-2">Signal Example</h2>
-        <p>Pair: XAU/USD (Gold)</p>
-        <p>Entry: 1940 | Stop Loss: 1935 | Take Profit: 1950</p>
-        <p className="text-gray-400 mt-2">Analysis: Gold bouncing off support zone, bullish momentum building.</p>
+        {/* 📊 Example Signal Section */}
+        <div className="bg-gray-900 p-6 rounded-lg shadow-md mb-8">
+          <h2 className="text-xl font-bold mb-3">📈 Today’s Market Signals</h2>
+          <ul className="list-disc list-inside text-left">
+            <li>Gold (XAU/USD): <span className="text-green-400">Buy at 1925 → TP 1935</span></li>
+            <li>EUR/USD: <span className="text-red-400">Sell at 1.0850 → TP 1.0800</span></li>
+            <li>Bitcoin (BTC): <span className="text-green-400">Buy at $42,500 → TP $43,200</span></li>
+          </ul>
+        </div>
+
+        {/* 📥 Download Latest Report */}
+        <div className="bg-yellow-500 text-black p-6 rounded-lg text-center">
+          <h2 className="text-2xl font-bold mb-2">📥 Weekly Analysis Report</h2>
+          <p className="mb-4">Get a deeper breakdown of this week’s trends.</p>
+          <a
+            href="https://drive.google.com/your-weekly-report.pdf"
+            target="_blank"
+            rel="noreferrer"
+            className="bg-black hover:bg-gray-900 text-yellow-500 font-bold py-3 px-6 rounded-lg"
+          >
+            Download Report
+          </a>
+        </div>
       </div>
-
-      <a
-        href="https://drive.google.com/your-shared-report"
-        target="_blank"
-        rel="noreferrer"
-        className="bg-yellow-500 text-black py-3 px-6 rounded-lg font-bold"
-      >
-        📥 Download Weekly Report
-      </a>
     </div>
   )
 }
