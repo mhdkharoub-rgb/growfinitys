@@ -1,98 +1,26 @@
-const tiers = [
-  {
-    name: 'Basic',
-    price: '$19/mo',
-    variantId: process.env.NEXT_PUBLIC_LS_BASIC_VARIANT_ID,
-    features: ['30 captions', '30 images', 'Content calendar'],
-  },
-  {
-    name: 'Pro',
-    price: '$49/mo',
-    variantId: process.env.NEXT_PUBLIC_LS_PRO_VARIANT_ID,
-    popular: true,
-    features: ['100 posts', '4 blog ideas', '2 ad copies', 'Calendar + hashtags'],
-  },
-  {
-    name: 'VIP',
-    price: '$99/mo',
-    variantId: process.env.NEXT_PUBLIC_LS_VIP_VARIANT_ID,
-    features: ['100 posts + 10 blog ideas', '5 ad copies', '4 email campaigns', 'Caption Generator tool'],
-  },
-];
-
 export default function Pricing() {
   return (
-    <section id="pricing" className="max-w-6xl mx-auto px-4 py-16">
-      <h2 className="text-3xl font-bold mb-10 text-white text-center">Choose your plan</h2>
-
-      <div className="grid md:grid-cols-3 gap-6">
-        {/* Basic */}
-        <div className="card p-6">
-          <h3 className="text-xl font-bold text-white">Basic</h3>
-          <p className="text-white/70 mt-2">$19 / month</p>
-          <ul className="text-white/70 mt-4 space-y-2">
-            <li>30 posts/month (captions + images)</li>
-            <li>Content calendar</li>
-          </ul>
-          <a
-            href="https://nas.io/growfinitys/zerolink/basic"
-            className="btn-gold mt-6 inline-block"
-          >
-            Get Basic
-          </a>
+    <section id="pricing" className="bg-gray-900 py-16 px-6 text-center">
+      <h2 className="text-3xl font-bold mb-8">💰 Membership Plans</h2>
+      <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="bg-gray-800 p-6 rounded-lg">
+          <h3 className="text-xl font-bold mb-4">Basic – $29/mo</h3>
+          <p>3–5 weekly signals (Forex only)</p>
+          <p>Weekly analysis summary</p>
         </div>
-
-        {/* Pro */}
-        <div className="card p-6 border border-yellow-600">
-          <h3 className="text-xl font-bold text-white">Pro</h3>
-          <p className="text-white/70 mt-2">$49 / month</p>
-          <ul className="text-white/70 mt-4 space-y-2">
-            <li>100 posts/month</li>
-            <li>4 blog ideas, 2 ad copies</li>
-            <li>Hashtag suggestions</li>
-          </ul>
-          <a
-            href="https://nas.io/growfinitys/zerolink/pro"
-            className="btn-gold mt-6 inline-block"
-          >
-            Get Pro
-          </a>
+        <div className="bg-yellow-500 text-black p-6 rounded-lg shadow-lg">
+          <h3 className="text-xl font-bold mb-4">Pro – $59/mo</h3>
+          <p>Daily Forex + Crypto signals</p>
+          <p>Full daily market overview</p>
+          <p>Weekly premium reports</p>
         </div>
-
-        {/* VIP */}
-        <div className="card p-6">
-          <h3 className="text-xl font-bold text-white">VIP</h3>
-          <p className="text-white/70 mt-2">$99 / month</p>
-          <ul className="text-white/70 mt-4 space-y-2">
-            <li>100 posts + 10 blog ideas</li>
-            <li>5 ad copies, 4 email campaigns</li>
-            <li>Priority niche support + Caption Generator</li>
-          </ul>
-          <a
-            href="https://nas.io/growfinitys/zerolink/vip"
-            className="btn-gold mt-6 inline-block"
-          >
-            Get VIP
-          </a>
+        <div className="bg-gray-800 p-6 rounded-lg">
+          <h3 className="text-xl font-bold mb-4">VIP – $99/mo</h3>
+          <p>All Pro features</p>
+          <p>Instant alerts (Telegram/Email)</p>
+          <p>Priority support</p>
         </div>
-      </div>
-
-      {/* Free Trial CTA (Nas.io signup) */}
-      <div className="text-center mt-10">
-        <a
-          href="<iframe
-      title="GROWFINITY checkout widget"
-      src="https://nas.io/checkout-widget?communityCode=GROWFINITY&communitySlug=%2Fgrowfinitys&buttonText=Join%20Now&buttonTextColorHex=%23000&buttonBgColorHex=%23fccb1d&widgetTheme=light&backgroundColorHex=%23fff"
-      width="100%"
-      height="320"
-      frameborder="0"
-      referrerpolicy="no-referrer"
-    ></iframe>"
-          className="btn-gold inline-block"
-        >
-          Join Free Trial
-        </a>
       </div>
     </section>
-  );
+  )
 }

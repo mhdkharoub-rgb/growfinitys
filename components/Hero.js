@@ -1,17 +1,17 @@
 export default function Hero() {
   return (
-    <section className="text-center py-24">
-      <h1 className="text-5xl font-bold text-white mb-6">
-        Growfinitys – AI Business Content Hub
+    <section className="text-center py-20 px-6 bg-gradient-to-b from-black to-gray-900">
+      <h1 className="text-5xl font-extrabold mb-6 text-yellow-400">
+        Your Daily Edge in Forex & Crypto Markets
       </h1>
-      <p className="text-white/70 mb-8">
-        Ready-to-use AI content packs for your business, delivered every month.
+      <p className="text-lg text-gray-300 mb-8">
+        Get reliable trading signals & market analysis for Gold, Oil, USD pairs, Bitcoin, Ethereum, and more.
       </p>
       <a
-        className="btn-gold px-6 py-3 rounded-lg font-semibold"
-        data-ms-membership="pln_free-trial-hbo80nkf"
+        href="#pricing"
+        className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 px-8 rounded-lg shadow-lg"
       >
-        Join Free Trial
+        📈 Join Free Trial – Get Today’s Signal
       </a>
     </section>
   )

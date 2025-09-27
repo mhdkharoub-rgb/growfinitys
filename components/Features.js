@@ -1,18 +1,13 @@
-
-const items=[
-  {title:'AI-Powered Captions',desc:'High-converting posts tailored to your niche every month.'},
-  {title:'Branded Images',desc:'Luxury black + gold visuals sized for all platforms.'},
-  {title:'Automation Workflows',desc:'Zapier/Make recipes that deliver packs to your Drive & email.'},
-];
-export default function Features(){
+export default function Features() {
   return (
-    <section className="max-w-6xl mx-auto px-4 py-16 grid md:grid-cols-3 gap-6">
-      {items.map((it,i)=>(
-        <div key={i} className="card">
-          <h3 className="text-xl font-semibold mb-2">{it.title}</h3>
-          <p className="text-white/80">{it.desc}</p>
-        </div>
-      ))}
+    <section id="features" className="max-w-5xl mx-auto px-6 py-16">
+      <h2 className="text-3xl font-bold mb-8 text-center">📊 Why Join Growfinitys?</h2>
+      <ul className="grid md:grid-cols-2 gap-8">
+        <li className="bg-gray-800 p-6 rounded-lg">✔ Reliable Daily Signals</li>
+        <li className="bg-gray-800 p-6 rounded-lg">✔ Market Analysis (Forex & Crypto)</li>
+        <li className="bg-gray-800 p-6 rounded-lg">✔ Weekly Reports with Charts</li>
+        <li className="bg-gray-800 p-6 rounded-lg">✔ VIP Alerts via Email/Telegram</li>
+      </ul>
     </section>
   )
 }
