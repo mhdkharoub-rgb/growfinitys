@@ -22,3 +22,16 @@ export default function Dashboard() {
     </div>
   )
 }
+if (typeof window !== "undefined" && !window.Nas?.io?.isLoggedIn()) {
+  return (
+    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
+      <h2 className="text-2xl font-bold mb-4">🔒 Members Only</h2>
+      <button
+        onClick={() => window.Nas.io.login()}
+        className="bg-yellow-500 text-black py-3 px-6 rounded-lg"
+      >
+        Log in with Nas.io
+      </button>
+    </div>
+  )
+}
