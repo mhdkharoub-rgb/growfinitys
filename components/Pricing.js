@@ -11,7 +11,14 @@ export default function Pricing() {
           <p className="mb-4">✔ Weekly analysis summary</p>
           <button
             className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 px-6 rounded-lg mt-auto"
-            onClick={() => window.Nas.io.checkout("https://nas.io/growfinitys/zerolink/basic")}
+            onClick={() => window.Nas.io.checkout("<iframe
+      title="GROWFINITY checkout widget"
+      src="https://nas.io/checkout-widget?communityCode=GROWFINITY&communitySlug=%2Fgrowfinitys&buttonText=Join%20Now&buttonTextColorHex=%23000&buttonBgColorHex=%23fccb1d&widgetTheme=light&backgroundColorHex=%23fff"
+      width="100%"
+      height="320"
+      frameborder="0"
+      referrerpolicy="no-referrer"
+    ></iframe>")}
           >
             Join Basic
           </button>
