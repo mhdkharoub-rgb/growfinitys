@@ -11,14 +11,7 @@ export default function Pricing() {
           <p className="mb-4">✔ Weekly analysis summary</p>
           <button
             className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 px-6 rounded-lg mt-auto"
-            onClick={() => window.Nas.io.checkout("<iframe
-      title="GROWFINITY checkout widget"
-      src="https://nas.io/checkout-widget?communityCode=GROWFINITY&communitySlug=%2Fgrowfinitys&buttonText=Join%20Now&buttonTextColorHex=%23000&buttonBgColorHex=%23fccb1d&widgetTheme=light&backgroundColorHex=%23fff"
-      width="100%"
-      height="320"
-      frameborder="0"
-      referrerpolicy="no-referrer"
-    ></iframe>")}
+            onClick={() => window.location.href="https://nas.io/growfinitys/zerolink/basic"}
           >
             Join Basic
           </button>
@@ -32,7 +25,7 @@ export default function Pricing() {
           <p className="mb-4">✔ Weekly premium reports</p>
           <button
             className="bg-black hover:bg-gray-900 text-yellow-500 font-bold py-3 px-6 rounded-lg mt-auto"
-            onClick={() => window.Nas.io.checkout("https://nas.io/growfinitys/zerolink/pro")}
+            onClick={() => window.location.href="https://nas.io/growfinitys/zerolink/pro"}
           >
             Join Pro
           </button>
@@ -46,7 +39,7 @@ export default function Pricing() {
           <p className="mb-4">✔ Priority support</p>
           <button
             className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 px-6 rounded-lg mt-auto"
-            onClick={() => window.Nas.io.checkout("https://nas.io/growfinitys/zerolink/vip")}
+            onClick={() => window.location.href="https://nas.io/growfinitys/zerolink/vip"}
           >
             Join VIP
           </button>
