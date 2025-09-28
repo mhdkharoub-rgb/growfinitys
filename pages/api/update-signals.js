@@ -9,27 +9,44 @@ export default async function handler(req, res) {
   try {
     let data = req.body;
 
-    // Handle if Zapier wraps signals inside { signals: [...] }
-    if (data.signals) {
+    // Case 1: Zapier wraps inside { signals: [...] }
+    if (data && data.signals) {
       data = data.signals;
     }
 
-    // Handle if data comes as a string (Zapier sometimes does this)
+    // Case 2: Zapier wraps inside { data: { signals: [...] } }
+    if (data && data.data && data.data.signals) {
+      data = data.data.signals;
+    }
+
+    // Case 3: Zapier sends stringified JSON
     if (typeof data === "string") {
       try {
         data = JSON.parse(data);
       } catch (err) {
-        return res.status(400).json({ error: "Invalid JSON format" });
+        return res.status(400).json({ error: "Invalid JSON string" });
       }
     }
 
-    // Validate that data is an array
+    // Case 4: Zapier sends { "signals": "[...]" } (string inside field)
+    if (typeof data === "object" && data !== null) {
+      for (const key of Object.keys(data)) {
+        if (typeof data[key] === "string" && data[key].trim().startsWith("[")) {
+          try {
+            data = JSON.parse(data[key]);
+          } catch (err) {
+            return res.status(400).json({ error: "Invalid JSON inside object" });
+          }
+        }
+      }
+    }
+
+    // Final validation
     if (!Array.isArray(data)) {
       return res.status(400).json({ error: "Signals must be an array" });
     }
 
     const filePath = path.join(process.cwd(), "data", "signals.json");
-
     fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
 
     return res.status(200).json({ message: "Signals updated successfully" });
