@@ -1,21 +1,21 @@
 // pages/api/get-signals.js
-import fs from "fs";
-import path from "path";
+import { supabase } from "../../lib/supabase";
 
-export default function handler(req, res) {
+export default async function handler(req, res) {
   try {
-    const filePath = path.join(process.cwd(), "data", "signals.json");
+    const { data, error } = await supabase
+      .from("signals")
+      .select("*")
+      .order("created_at", { ascending: false });
 
-    if (!fs.existsSync(filePath)) {
-      return res.status(200).json({ signals: [] });
+    if (error) {
+      console.error("❌ Supabase fetch error:", error);
+      return res.status(500).json({ error: error.message });
     }
 
-    const raw = fs.readFileSync(filePath, "utf-8");
-    const signals = raw ? JSON.parse(raw) : [];
-
-    return res.status(200).json({ signals });
+    return res.status(200).json({ signals: data });
   } catch (err) {
-    console.error("❌ Error reading signals:", err);
+    console.error("❌ Error fetching signals:", err);
     return res.status(500).json({ error: "Failed to load signals" });
   }
 }
