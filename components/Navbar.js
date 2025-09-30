@@ -7,6 +7,7 @@ export default function Navbar() {
         <a href="#pricing" className="hover:text-yellow-400">Pricing</a>
         <a href="#example" className="hover:text-yellow-400">Example</a>
         <a href="#how" className="hover:text-yellow-400">How It Works</a>
+    <a href="/dashboard" className="hover:text-yellow-400">Dashboard</a>
       </div>
     </nav>
   )
