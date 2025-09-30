@@ -8,23 +8,19 @@ export default async function handler(req, res) {
   try {
     let data = req.body;
 
-    // Wrap single object into array
+    // ✅ If Zapier sends a single object, wrap it in an array
     if (!Array.isArray(data)) {
       data = [data];
     }
 
-    // ✅ Debug: log the raw body
-    console.log("🔎 Raw request body:", JSON.stringify(req.body, null, 2));
+    // ✅ Echo back raw body for debugging
+    return res.status(200).json({
+      success: true,
+      message: "Received signals",
+      rawBody: req.body,   // what Zapier actually sent
+      normalized: data     // what the API processed
+    });
 
-    // ✅ Looser validation: only require pair & signal
-    if (!data.every(sig => sig.pair && sig.signal)) {
-      return res.status(400).json({ error: "Invalid signal format", received: data });
-    }
-
-    // At this point, we accept partial data
-    console.log("✅ Received signals:", data);
-
-    return res.status(200).json({ success: true, signals: data });
   } catch (err) {
     console.error("❌ Error updating signals:", err);
     return res.status(500).json({ error: "Failed to update signals" });
