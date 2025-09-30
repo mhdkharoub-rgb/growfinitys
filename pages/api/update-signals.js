@@ -8,18 +8,20 @@ export default async function handler(req, res) {
   try {
     let data = req.body;
 
-    // ✅ If Zapier sends a single object, wrap it in an array
+    // Wrap single object into array
     if (!Array.isArray(data)) {
       data = [data];
     }
 
-    // Validate signals
-    if (!data.every(sig => sig.pair && sig.signal && sig.entry && sig.tp && sig.sl && sig.date)) {
-      return res.status(400).json({ error: "Invalid signal format" });
+    // ✅ Debug: log the raw body
+    console.log("🔎 Raw request body:", JSON.stringify(req.body, null, 2));
+
+    // ✅ Looser validation: only require pair & signal
+    if (!data.every(sig => sig.pair && sig.signal)) {
+      return res.status(400).json({ error: "Invalid signal format", received: data });
     }
 
-    // Here you can save signals to your DB, Google Sheets, etc.
-    // For now just log them
+    // At this point, we accept partial data
     console.log("✅ Received signals:", data);
 
     return res.status(200).json({ success: true, signals: data });
