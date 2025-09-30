@@ -1,229 +1,157 @@
+// components/SignalsTable.js
 import { useEffect, useState } from "react"
+import { supabase } from "../lib/supabase"
+import { toast } from "react-hot-toast"
 
 export default function SignalsTable() {
   const [signals, setSignals] = useState([])
-  const [filteredSignals, setFilteredSignals] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [lastUpdated, setLastUpdated] = useState(null)
-  const [toast, setToast] = useState({ message: "", type: "" })
+  const [loading, setLoading] = useState(false)
+  const [filters, setFilters] = useState({
+    pair: "",
+    signal: "",
+    date: "",
+  })
 
-  // filters with persistence
-  const [pairFilter, setPairFilter] = useState("All")
-  const [typeFilter, setTypeFilter] = useState("All")
-  const [dateFilter, setDateFilter] = useState("All")
-
-  // ✅ Load saved filters from localStorage on first render
+  // ✅ Load filters from localStorage on mount
   useEffect(() => {
-    const savedPair = localStorage.getItem("pairFilter")
-    const savedType = localStorage.getItem("typeFilter")
-    const savedDate = localStorage.getItem("dateFilter")
-
-    if (savedPair) setPairFilter(savedPair)
-    if (savedType) setTypeFilter(savedType)
-    if (savedDate) setDateFilter(savedDate)
+    const savedFilters = localStorage.getItem("signalFilters")
+    if (savedFilters) {
+      setFilters(JSON.parse(savedFilters))
+    }
   }, [])
 
-  // ✅ Save filters whenever they change
+  // ✅ Save filters to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem("pairFilter", pairFilter)
-    localStorage.setItem("typeFilter", typeFilter)
-    localStorage.setItem("dateFilter", dateFilter)
-  }, [pairFilter, typeFilter, dateFilter])
+    localStorage.setItem("signalFilters", JSON.stringify(filters))
+  }, [filters])
 
-  const showToast = (message, type = "success") => {
-    setToast({ message, type })
-    setTimeout(() => setToast({ message: "", type: "" }), 3000)
-  }
-
-  // fetch function
-  const fetchSignals = async (manual = false) => {
+  // ✅ Fetch signals from Supabase
+  async function fetchSignals() {
     setLoading(true)
-    try {
-      const res = await fetch("/api/get-signals")
-      if (!res.ok) throw new Error("Failed to fetch signals")
+    let query = supabase.from("signals").select("*").order("date", { ascending: false })
 
-      const data = await res.json()
-      setSignals(data.signals || [])
-      setLastUpdated(new Date().toLocaleTimeString())
+    if (filters.pair) query = query.eq("pair", filters.pair)
+    if (filters.signal) query = query.eq("signal", filters.signal)
+    if (filters.date) query = query.eq("date", filters.date)
 
-      if (manual) showToast("✅ Signals updated", "success")
-    } catch (err) {
-      console.error("Error fetching signals:", err)
-      showToast("⚠ Failed to update signals", "error")
-    } finally {
-      setLoading(false)
+    const { data, error } = await query
+    setLoading(false)
+
+    if (error) {
+      console.error(error)
+      toast.error("Failed to fetch signals")
+    } else {
+      setSignals(data)
+      toast.success("Signals updated")
     }
   }
 
-  // apply filters
-  useEffect(() => {
-    let filtered = [...signals]
-
-    if (pairFilter !== "All") {
-      filtered = filtered.filter((s) => s.pair === pairFilter)
-    }
-    if (typeFilter !== "All") {
-      filtered = filtered.filter((s) => s.signal === typeFilter)
-    }
-    if (dateFilter !== "All") {
-      const today = new Date()
-      filtered = filtered.filter((s) => {
-        const d = new Date(s.date)
-        if (dateFilter === "Today") {
-          return d.toDateString() === today.toDateString()
-        }
-        if (dateFilter === "This Week") {
-          const weekAgo = new Date()
-          weekAgo.setDate(today.getDate() - 7)
-          return d >= weekAgo && d <= today
-        }
-        if (dateFilter === "This Month") {
-          return (
-            d.getMonth() === today.getMonth() &&
-            d.getFullYear() === today.getFullYear()
-          )
-        }
-        return true
-      })
-    }
-
-    setFilteredSignals(filtered)
-  }, [signals, pairFilter, typeFilter, dateFilter])
-
-  // auto-refresh every 60s
+  // ✅ Auto refresh every 60s
   useEffect(() => {
     fetchSignals()
-    const interval = setInterval(() => fetchSignals(false), 60000)
+    const interval = setInterval(fetchSignals, 60000)
     return () => clearInterval(interval)
-  }, [])
+  }, [filters])
 
-  const clearFilters = () => {
-    setPairFilter("All")
-    setTypeFilter("All")
-    setDateFilter("All")
+  // ✅ Clear filters
+  function clearFilters() {
+    setFilters({ pair: "", signal: "", date: "" })
+    toast.success("Filters cleared")
   }
 
   return (
-    <div className="overflow-x-auto relative">
-      {/* ✅ Toast Notification */}
-      {toast.message && (
-        <div
-          className={`fixed top-6 right-6 px-4 py-2 rounded-lg shadow-lg transition-all animate-fade-in 
-            ${toast.type === "success" ? "bg-green-600 text-white" : "bg-red-600 text-white"}`}
-        >
-          {toast.message}
-        </div>
-      )}
-
-      {/* Filters */}
-      <div className="flex flex-wrap gap-4 mb-4 justify-between items-center">
-        <div className="flex gap-4">
+    <div className="max-w-6xl mx-auto px-4 py-6">
+      {/* Filters + Refresh */}
+      <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+        <div className="flex flex-wrap gap-3">
+          <input
+            type="text"
+            placeholder="Pair (e.g. XAU/USD)"
+            value={filters.pair}
+            onChange={(e) => setFilters({ ...filters, pair: e.target.value })}
+            className="px-3 py-2 rounded bg-gray-800 text-white"
+          />
           <select
-            className="bg-gray-800 text-white px-3 py-2 rounded"
-            value={pairFilter}
-            onChange={(e) => setPairFilter(e.target.value)}
+            value={filters.signal}
+            onChange={(e) => setFilters({ ...filters, signal: e.target.value })}
+            className="px-3 py-2 rounded bg-gray-800 text-white"
           >
-            <option>All</option>
-            <option>XAU/USD</option>
-            <option>BTC/USD</option>
-            <option>ETH/USD</option>
-            <option>EUR/USD</option>
-            <option>GBP/USD</option>
+            <option value="">All Signals</option>
+            <option value="Buy">Buy</option>
+            <option value="Sell">Sell</option>
           </select>
-
-          <select
-            className="bg-gray-800 text-white px-3 py-2 rounded"
-            value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
-          >
-            <option>All</option>
-            <option>Buy</option>
-            <option>Sell</option>
-          </select>
-
-          <select
-            className="bg-gray-800 text-white px-3 py-2 rounded"
-            value={dateFilter}
-            onChange={(e) => setDateFilter(e.target.value)}
-          >
-            <option>All</option>
-            <option>Today</option>
-            <option>This Week</option>
-            <option>This Month</option>
-          </select>
-
-          {/* ✅ Clear Filters Button */}
+          <input
+            type="date"
+            value={filters.date}
+            onChange={(e) => setFilters({ ...filters, date: e.target.value })}
+            className="px-3 py-2 rounded bg-gray-800 text-white"
+          />
           <button
             onClick={clearFilters}
-            className="bg-gray-600 text-white px-3 py-2 rounded hover:bg-gray-500 transition"
+            className="bg-red-500 text-white px-3 py-2 rounded"
           >
-            ❌ Clear
+            Clear
           </button>
         </div>
-
-        <div className="flex items-center gap-4">
-          <p className="text-gray-400 text-sm">
-            {lastUpdated ? `Last updated: ${lastUpdated}` : "Loading..."}
-          </p>
-          <button
-            onClick={() => fetchSignals(true)}
-            className="bg-yellow-500 text-black px-4 py-2 rounded-lg hover:bg-yellow-400 transition"
-          >
-            🔄 Refresh
-          </button>
-        </div>
+        <button
+          onClick={fetchSignals}
+          className="bg-yellow-500 text-black px-4 py-2 rounded"
+        >
+          🔄 Refresh
+        </button>
       </div>
 
-      {/* Table */}
-      <table className="w-full border border-gray-700 rounded-lg">
-        <thead className="bg-gray-800">
-          <tr>
-            <th className="px-4 py-2 text-left">Pair</th>
-            <th className="px-4 py-2 text-left">Signal</th>
-            <th className="px-4 py-2 text-left">Entry</th>
-            <th className="px-4 py-2 text-left">TP</th>
-            <th className="px-4 py-2 text-left">SL</th>
-            <th className="px-4 py-2 text-left">Date</th>
-          </tr>
-        </thead>
-        <tbody>
-          {loading ? (
+      {/* ✅ Desktop Table */}
+      <div className="hidden md:block overflow-x-auto">
+        <table className="min-w-full border border-gray-700 text-white">
+          <thead className="bg-gray-900">
             <tr>
-              <td colSpan="6" className="px-4 py-6 text-center text-gray-400">
-                Loading signals...
-              </td>
+              <th className="px-4 py-2 border border-gray-700">Pair</th>
+              <th className="px-4 py-2 border border-gray-700">Signal</th>
+              <th className="px-4 py-2 border border-gray-700">Entry</th>
+              <th className="px-4 py-2 border border-gray-700">TP</th>
+              <th className="px-4 py-2 border border-gray-700">SL</th>
+              <th className="px-4 py-2 border border-gray-700">Date</th>
             </tr>
-          ) : filteredSignals.length === 0 ? (
-            <tr>
-              <td colSpan="6" className="px-4 py-6 text-center text-gray-400">
-                No signals found
-              </td>
-            </tr>
-          ) : (
-            filteredSignals.map((sig, i) => (
-              <tr
-                key={i}
-                className="border-t border-gray-700 hover:bg-gray-800 transition"
-              >
-                <td className="px-4 py-2">{sig.pair}</td>
-                <td
-                  className={`px-4 py-2 font-bold ${
-                    sig.signal === "Buy" ? "text-green-400" : "text-red-400"
-                  }`}
-                >
-                  {sig.signal}
+          </thead>
+          <tbody>
+            {signals.map((s, i) => (
+              <tr key={i} className="text-center bg-gray-800 hover:bg-gray-700">
+                <td className="px-4 py-2 border border-gray-700">{s.pair}</td>
+                <td className={`px-4 py-2 border border-gray-700 font-bold ${
+                  s.signal === "Buy" ? "text-green-400" : "text-red-400"
+                }`}>
+                  {s.signal}
                 </td>
-                <td className="px-4 py-2">{sig.entry}</td>
-                <td className="px-4 py-2">{sig.tp}</td>
-                <td className="px-4 py-2">{sig.sl}</td>
-                <td className="px-4 py-2">
-                  {new Date(sig.date).toLocaleDateString()}
-                </td>
+                <td className="px-4 py-2 border border-gray-700">{s.entry}</td>
+                <td className="px-4 py-2 border border-gray-700">{s.tp}</td>
+                <td className="px-4 py-2 border border-gray-700">{s.sl}</td>
+                <td className="px-4 py-2 border border-gray-700">{s.date}</td>
               </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* ✅ Mobile Cards */}
+      <div className="md:hidden space-y-4">
+        {signals.map((s, i) => (
+          <div key={i} className="p-4 bg-gray-800 rounded-lg shadow-md">
+            <h3 className="text-xl font-bold">{s.pair}</h3>
+            <p className={`font-bold ${
+              s.signal === "Buy" ? "text-green-400" : "text-red-400"
+            }`}>
+              {s.signal}
+            </p>
+            <p>Entry: {s.entry}</p>
+            <p>TP: {s.tp}</p>
+            <p>SL: {s.sl}</p>
+            <p className="text-sm text-gray-400">Date: {s.date}</p>
+          </div>
+        ))}
+      </div>
+
+      {loading && <p className="text-gray-400 mt-4">Loading...</p>}
     </div>
   )
 }
