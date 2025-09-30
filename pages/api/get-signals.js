@@ -1,21 +1,20 @@
-// pages/api/get-signals.js
-import { supabase } from "../../lib/supabase";
+import { supabase } from "../../lib/supabase"
 
 export default async function handler(req, res) {
   try {
     const { data, error } = await supabase
       .from("signals")
       .select("*")
-      .order("created_at", { ascending: false });
+      .order("date", { ascending: false })
 
     if (error) {
-      console.error("❌ Supabase fetch error:", error);
-      return res.status(500).json({ error: error.message });
+      console.error("❌ Supabase fetch error:", error)
+      return res.status(500).json({ error: error.message })
     }
 
-    return res.status(200).json({ signals: data });
+    return res.status(200).json({ signals: data })
   } catch (err) {
-    console.error("❌ Error fetching signals:", err);
-    return res.status(500).json({ error: "Failed to load signals" });
+    console.error("❌ Error fetching signals:", err)
+    return res.status(500).json({ error: "Failed to fetch signals" })
   }
 }
