@@ -1,70 +1,73 @@
-import { useEffect, useState } from "react"
+// pages/dashboard.js
+import { useEffect, useState } from "react";
 
 export default function Dashboard() {
-  const [signals, setSignals] = useState([])
-  const [reportUrl, setReportUrl] = useState("")
+  const [signals, setSignals] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchData() {
+    async function fetchSignals() {
       try {
-        const signalsRes = await fetch("/data/signals.json")
-        if (signalsRes.ok) {
-          const signalsData = await signalsRes.json()
-          setSignals(signalsData)
-        }
-
-        const reportRes = await fetch("/data/report.json")
-        if (reportRes.ok) {
-          const reportData = await reportRes.json()
-          setReportUrl(reportData.reportUrl)
-        }
+        const res = await fetch("/api/get-signals");
+        const data = await res.json();
+        setSignals(data.signals || []);
       } catch (err) {
-        console.error("Failed to load dashboard data:", err)
+        console.error("❌ Failed to load signals:", err);
+      } finally {
+        setLoading(false);
       }
     }
-    fetchData()
-  }, [])
+    fetchSignals();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black text-white">
+        <p>Loading signals...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-black text-white py-16 px-6">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-4">👋 Welcome back to Growfinitys!</h1>
+    <div className="min-h-screen bg-black text-white p-6">
+      <h1 className="text-3xl font-bold mb-6">📊 Trading Signals Dashboard</h1>
 
-        {/* Signals */}
-        <div className="bg-gray-900 p-6 rounded-lg shadow-md mb-8">
-          <h2 className="text-xl font-bold mb-3">📈 Today’s Market Signals</h2>
-          <ul className="list-disc list-inside text-left">
-            {signals.length > 0 ? (
-              signals.map((s, idx) => (
-                <li key={idx}>
-                  {s.pair}: <span className={s.signal === "Buy" ? "text-green-400" : "text-red-400"}>
-                    {s.signal} at {s.entry} → TP {s.tp} (SL {s.sl})
-                  </span>
-                </li>
-              ))
-            ) : (
-              <li>No signals yet.</li>
-            )}
-          </ul>
-        </div>
-
-        {/* Weekly Report */}
-        <div className="bg-yellow-500 text-black p-6 rounded-lg text-center">
-          <h2 className="text-2xl font-bold mb-2">📥 Weekly Analysis Report</h2>
-          {reportUrl ? (
-            <a
-              href={reportUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="bg-black hover:bg-gray-900 text-yellow-500 font-bold py-3 px-6 rounded-lg"
-            >
-              Download Report
-            </a>
-          ) : (
-            <p>No report available yet.</p>
-          )}
-        </div>
-      </div>
+      {signals.length === 0 ? (
+        <p className="text-gray-400">No signals available yet.</p>
+      ) : (
+        <table className="w-full border border-gray-700 rounded-lg overflow-hidden">
+          <thead className="bg-gray-800 text-yellow-400">
+            <tr>
+              <th className="p-3 text-left">Date</th>
+              <th className="p-3 text-left">Pair</th>
+              <th className="p-3 text-left">Signal</th>
+              <th className="p-3 text-left">Entry</th>
+              <th className="p-3 text-left">TP</th>
+              <th className="p-3 text-left">SL</th>
+            </tr>
+          </thead>
+          <tbody>
+            {signals.map((sig, i) => (
+              <tr key={i} className="border-t border-gray-700 hover:bg-gray-900">
+                <td className="p-3">{sig.date || "-"}</td>
+                <td className="p-3">{sig.pair || "-"}</td>
+                <td
+                  className={`p-3 font-bold ${
+                    sig.signal?.toLowerCase() === "buy"
+                      ? "text-green-400"
+                      : "text-red-400"
+                  }`}
+                >
+                  {sig.signal || "-"}
+                </td>
+                <td className="p-3">{sig.entry || "-"}</td>
+                <td className="p-3">{sig.tp || "-"}</td>
+                <td className="p-3">{sig.sl || "-"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
-  )
+  );
 }
