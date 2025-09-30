@@ -1,6 +1,5 @@
 // pages/api/update-signals.js
-import fs from "fs";
-import path from "path";
+import { supabase } from "../../lib/supabase";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -10,39 +9,26 @@ export default async function handler(req, res) {
   try {
     let data = req.body;
 
-    // Wrap single object into array
+    // Ensure signals are always an array
     if (!Array.isArray(data)) {
       data = [data];
     }
 
-    // Path to signals.json
-    const filePath = path.join(process.cwd(), "data", "signals.json");
+    // Insert into Supabase
+    const { error } = await supabase.from("signals").insert(data);
 
-    // Load existing signals
-    let existing = [];
-    if (fs.existsSync(filePath)) {
-      const raw = fs.readFileSync(filePath, "utf-8");
-      existing = raw ? JSON.parse(raw) : [];
+    if (error) {
+      console.error("❌ Supabase insert error:", error);
+      return res.status(500).json({ error: error.message });
     }
-
-    // Append new signals with timestamp
-    const newSignals = data.map(sig => ({
-      ...sig,
-      savedAt: new Date().toISOString()
-    }));
-    const updated = [...existing, ...newSignals];
-
-    // Save back to file
-    fs.writeFileSync(filePath, JSON.stringify(updated, null, 2));
 
     return res.status(200).json({
       success: true,
-      message: "Signals stored successfully",
-      newSignals,
-      totalSignals: updated.length
+      message: "Signals saved to Supabase",
+      signals: data,
     });
   } catch (err) {
-    console.error("❌ Error updating signals:", err);
+    console.error("❌ Error saving signals:", err);
     return res.status(500).json({ error: "Failed to update signals" });
   }
 }
