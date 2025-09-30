@@ -1,5 +1,5 @@
 // pages/api/update-signals.js
-import { supabase } from "../../lib/supabase";
+import { supabaseAdmin } from "../../lib/supabase";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -9,13 +9,11 @@ export default async function handler(req, res) {
   try {
     let data = req.body;
 
-    // Ensure signals are always an array
     if (!Array.isArray(data)) {
       data = [data];
     }
 
-    // Insert into Supabase
-    const { error } = await supabase.from("signals").insert(data);
+    const { error } = await supabaseAdmin.from("signals").insert(data);
 
     if (error) {
       console.error("❌ Supabase insert error:", error);
