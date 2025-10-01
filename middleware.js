@@ -1,17 +1,24 @@
-// middleware.js
 import { NextResponse } from "next/server"
+import { supabase } from "./lib/supabase"
 
-export function middleware(req) {
+export async function middleware(req) {
+  const sessionEmail = req.cookies.get("session_email")?.value
   const url = req.nextUrl
-  const token = req.cookies.get("nasio_session")
 
-  // Protect only API routes
-  if (url.pathname.startsWith("/api/")) {
-    if (!token) {
-      return new NextResponse(
-        JSON.stringify({ error: "Unauthorized: Login required" }),
-        { status: 401, headers: { "Content-Type": "application/json" } }
-      )
+  if (url.pathname.startsWith("/dashboard") || url.pathname.startsWith("/api/signals")) {
+    if (!sessionEmail) {
+      return NextResponse.redirect(new URL("/", req.url))
+    }
+
+    // Optionally check role
+    const { data: user } = await supabase
+      .from("users")
+      .select("role")
+      .eq("email", sessionEmail)
+      .single()
+
+    if (!user) {
+      return NextResponse.redirect(new URL("/", req.url))
     }
   }
 
