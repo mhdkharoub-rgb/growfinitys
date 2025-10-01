@@ -1,22 +1,34 @@
 // pages/dashboard.js
 import { useEffect, useState } from "react"
+import { useRouter } from "next/router"
 import SignalsTable from "../components/SignalsTable"
 
 export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
-    // Check login status once Nas.io SDK loads
     if (typeof window !== "undefined" && window.Nas?.io) {
       window.Nas.io.isLoggedIn().then((loggedIn) => {
-        setIsAuthenticated(loggedIn)
+        if (!loggedIn) {
+          router.replace("/") // ✅ Redirect immediately if not logged in
+        } else {
+          setIsAuthenticated(true)
+        }
         setIsLoading(false)
       })
     } else {
       setIsLoading(false)
     }
-  }, [])
+  }, [router])
+
+  const handleLogout = () => {
+    if (window.Nas?.io) {
+      window.Nas.io.logout()
+      router.push("/") // ✅ Redirect to homepage after logout
+    }
+  }
 
   if (isLoading) {
     return (
@@ -27,26 +39,22 @@ export default function Dashboard() {
   }
 
   if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
-        <h2 className="text-2xl font-bold mb-4">🔒 Members Only</h2>
-        <p className="text-gray-400 mb-6">
-          You need to log in with your Nas.io account to access the trading signals.
-        </p>
-        <button
-          onClick={() => window.Nas?.io?.login()}
-          className="bg-yellow-500 text-black py-3 px-6 rounded-lg"
-        >
-          Log in with Nas.io
-        </button>
-      </div>
-    )
+    return null // prevent flashing the dashboard before redirect
   }
 
   return (
     <div className="min-h-screen bg-black text-white">
       <div className="max-w-6xl mx-auto px-4 py-10">
-        <h1 className="text-3xl font-bold mb-4">📊 Trading Signals Dashboard</h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold">📊 Trading Signals Dashboard</h1>
+          <button
+            onClick={handleLogout}
+            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg"
+          >
+            Logout
+          </button>
+        </div>
+
         <p className="text-gray-400 mb-8">
           Welcome back! Use the filters to refine by pair, type, or date.  
           Refresh manually anytime, or let it auto-refresh every 60 seconds.
