@@ -12,7 +12,7 @@ export default function Pricing() {
           {/* Basic Plan */}
           <div className="bg-gray-900 rounded-xl p-8 shadow-lg text-center border border-yellow-500">
             <h3 className="text-2xl font-semibold mb-4">Basic</h3>
-            <p className="text-4xl font-bold mb-6">$19<span className="text-lg">/mo</span></p>
+            <p className="text-4xl font-bold mb-6">$29<span className="text-lg">/mo</span></p>
             <ul className="text-gray-300 mb-6 space-y-2">
               <li>Daily Gold, Oil & USD signals</li>
               <li>Basic Crypto Signals</li>
