@@ -18,17 +18,27 @@ export default function Pricing() {
               <li>Basic Crypto Signals</li>
               <li>Email alerts included</li>
             </ul>
+            {/* Monthly */}
             <a
               href="https://nas.io/growfinitys/zerolink/basic"
               target="_blank"
               rel="noreferrer"
-              className="bg-yellow-500 text-black font-semibold py-3 px-6 rounded-lg hover:bg-yellow-400 transition"
+              className="block bg-yellow-500 text-black font-semibold py-3 px-6 rounded-lg hover:bg-yellow-400 transition mb-2"
             >
-              Join Basic
+              Join Monthly
+            </a>
+            {/* Yearly */}
+            <a
+              href="https://nas.io/growfinitys/zerolink/basic-yearly"
+              target="_blank"
+              rel="noreferrer"
+              className="block bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold py-3 px-6 rounded-lg shadow-lg hover:from-yellow-300 hover:to-yellow-500 transition"
+            >
+              Save 2 Months – Join Yearly
             </a>
           </div>
 
-          {/* Pro Plan with "Most Popular" badge */}
+          {/* Pro Plan (Most Popular) */}
           <div className="relative bg-gray-900 rounded-xl p-8 shadow-lg text-center border-2 border-yellow-500 transform scale-105">
             <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-yellow-500 text-black px-4 py-1 rounded-full text-sm font-semibold shadow-md">
               ⭐ Most Popular
@@ -41,13 +51,23 @@ export default function Pricing() {
               <li>Premium Crypto Signals</li>
               <li>Telegram/Email Alerts</li>
             </ul>
+            {/* Monthly */}
             <a
               href="https://nas.io/growfinitys/zerolink/pro"
               target="_blank"
               rel="noreferrer"
-              className="bg-yellow-500 text-black font-semibold py-3 px-6 rounded-lg hover:bg-yellow-400 transition"
+              className="block bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold py-4 px-8 rounded-lg shadow-lg hover:from-yellow-300 hover:to-yellow-500 transition transform hover:scale-105 mb-2"
             >
-              Join Pro
+              🚀 Join Monthly
+            </a>
+            {/* Yearly */}
+            <a
+              href="https://nas.io/growfinitys/zerolink/pro-yearly"
+              target="_blank"
+              rel="noreferrer"
+              className="block bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold py-3 px-6 rounded-lg shadow-lg hover:from-yellow-300 hover:to-yellow-500 transition"
+            >
+              Save 2 Months – Join Yearly
             </a>
           </div>
 
@@ -61,13 +81,23 @@ export default function Pricing() {
               <li>Priority Support</li>
               <li>Exclusive Market Insights</li>
             </ul>
+            {/* Monthly */}
             <a
               href="https://nas.io/growfinitys/zerolink/vip"
               target="_blank"
               rel="noreferrer"
-              className="bg-yellow-500 text-black font-semibold py-3 px-6 rounded-lg hover:bg-yellow-400 transition"
+              className="block bg-yellow-500 text-black font-semibold py-3 px-6 rounded-lg hover:bg-yellow-400 transition mb-2"
             >
-              Join VIP
+              Join Monthly
+            </a>
+            {/* Yearly */}
+            <a
+              href="https://nas.io/growfinitys/zerolink/vip-yearly"
+              target="_blank"
+              rel="noreferrer"
+              className="block bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold py-3 px-6 rounded-lg shadow-lg hover:from-yellow-300 hover:to-yellow-500 transition"
+            >
+              Save 2 Months – Join Yearly
             </a>
           </div>
         </div>
