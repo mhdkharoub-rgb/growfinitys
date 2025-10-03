@@ -28,9 +28,12 @@ export default function Pricing() {
             </a>
           </div>
 
-          {/* Pro Plan */}
-          <div className="bg-gray-900 rounded-xl p-8 shadow-lg text-center border border-yellow-500 transform scale-105">
-            <h3 className="text-2xl font-semibold mb-4">Pro</h3>
+          {/* Pro Plan with "Most Popular" badge */}
+          <div className="relative bg-gray-900 rounded-xl p-8 shadow-lg text-center border-2 border-yellow-500 transform scale-105">
+            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-yellow-500 text-black px-4 py-1 rounded-full text-sm font-semibold shadow-md">
+              ⭐ Most Popular
+            </div>
+            <h3 className="text-2xl font-semibold mb-4 mt-4">Pro</h3>
             <p className="text-4xl font-bold mb-6">$59<span className="text-lg">/mo</span></p>
             <ul className="text-gray-300 mb-6 space-y-2">
               <li>All Basic Features +</li>
