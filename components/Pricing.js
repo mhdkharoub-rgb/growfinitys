@@ -31,7 +31,7 @@ export default function Pricing() {
           {/* Pro Plan */}
           <div className="bg-gray-900 rounded-xl p-8 shadow-lg text-center border border-yellow-500 transform scale-105">
             <h3 className="text-2xl font-semibold mb-4">Pro</h3>
-            <p className="text-4xl font-bold mb-6">$49<span className="text-lg">/mo</span></p>
+            <p className="text-4xl font-bold mb-6">$59<span className="text-lg">/mo</span></p>
             <ul className="text-gray-300 mb-6 space-y-2">
               <li>All Basic Features +</li>
               <li>Advanced Forex Pairs</li>
