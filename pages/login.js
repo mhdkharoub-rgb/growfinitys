@@ -1,41 +1,60 @@
+// pages/login.js
 import { useState } from "react"
+import { useRouter } from "next/router"
 
-export default function Signup() {
+export default function Login() {
+  const router = useRouter()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [message, setMessage] = useState("")
 
-  const handleSignup = async () => {
-    const res = await fetch("/api/auth/signup", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password })
-    })
-    const data = await res.json()
-    alert(data.message || data.error)
+  const handleLogin = async (e) => {
+    e.preventDefault()
+    setMessage("Signing you in...")
+
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      })
+      const data = await res.json()
+      if (res.ok) router.push("/dashboard")
+      else setMessage(data.error)
+    } catch {
+      setMessage("⚠️ Something went wrong. Try again.")
+    }
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white">
-      <h1 className="text-2xl mb-6">Sign Up</h1>
-      <input
-        className="mb-4 px-4 py-2 text-black"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
-      <input
-        className="mb-4 px-4 py-2 text-black"
-        placeholder="Password"
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      <button
-        onClick={handleSignup}
-        className="bg-yellow-500 px-6 py-2 rounded-lg"
-      >
-        Sign Up
-      </button>
+    <div className="min-h-screen bg-black text-white flex flex-col justify-center items-center">
+      <h1 className="text-3xl font-bold mb-6 text-yellow-500">Welcome Back</h1>
+      <form onSubmit={handleLogin} className="w-80 space-y-4">
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="w-full px-4 py-2 rounded bg-gray-800 text-white focus:outline-none"
+          required
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="w-full px-4 py-2 rounded bg-gray-800 text-white focus:outline-none"
+          required
+        />
+        <button
+          type="submit"
+          className="w-full bg-yellow-500 text-black font-bold py-2 rounded hover:bg-yellow-400 transition"
+        >
+          Log In
+        </button>
+      </form>
+      {message && <p className="mt-4 text-gray-300">{message}</p>}
+      <a href="/signup" className="mt-4 text-yellow-400 hover:underline">Create a new account</a>
     </div>
   )
 }
