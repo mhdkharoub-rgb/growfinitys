@@ -17,15 +17,26 @@ export default function Navbar() {
           <a href="#how" className="hover:text-yellow-400 transition">How It Works</a>
         </div>
 
-        {/* Sign Up Button */}
-        <a
-          href="https://nas.io/growfinitys"
-          target="_blank"
-          rel="noreferrer"
-          className="bg-yellow-500 text-black font-semibold py-2 px-5 rounded-lg hover:bg-yellow-400 transition ml-6"
-        >
-          Sign Up
-        </a>
+        {/* Buttons Section */}
+        <div className="flex items-center space-x-4">
+          {/* Dashboard Button */}
+          <Link
+            href="/dashboard"
+            className="border border-yellow-500 text-yellow-500 font-semibold py-2 px-5 rounded-lg hover:bg-yellow-500 hover:text-black transition"
+          >
+            Dashboard
+          </Link>
+
+          {/* Sign Up Button */}
+          <a
+            href="https://nas.io/growfinitys/zerolink/basic"
+            target="_blank"
+            rel="noreferrer"
+            className="bg-yellow-500 text-black font-semibold py-2 px-5 rounded-lg hover:bg-yellow-400 transition"
+          >
+            Sign Up
+          </a>
+        </div>
       </div>
     </nav>
   )
