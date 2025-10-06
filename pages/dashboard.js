@@ -1,67 +1,72 @@
 // pages/dashboard.js
 import { useEffect, useState } from "react"
-import { useRouter } from "next/router"
+import { supabase } from "../lib/supabase"
 import SignalsTable from "../components/SignalsTable"
+import { useRouter } from "next/router"
 
 export default function Dashboard() {
-  const [isLoading, setIsLoading] = useState(true)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [signals, setSignals] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const router = useRouter()
 
+  // Fetch signals from Supabase
+  async function fetchSignals() {
+    try {
+      setLoading(true)
+      const { data, error } = await supabase
+        .from("signals")
+        .select("*")
+        .order("created_at", { ascending: false })
+      if (error) throw error
+      setSignals(data || [])
+    } catch (err) {
+      console.error("Error fetching signals:", err.message)
+      setError("Unable to load trading signals. Please try again.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
   useEffect(() => {
-    if (typeof window !== "undefined" && window.Nas?.io) {
-      window.Nas.io.isLoggedIn().then((loggedIn) => {
-        if (!loggedIn) {
-          router.replace("/") // ✅ Redirect immediately if not logged in
-        } else {
-          setIsAuthenticated(true)
-        }
-        setIsLoading(false)
-      })
-    } else {
-      setIsLoading(false)
-    }
-  }, [router])
+    // Optional auth check (placeholder)
+    // if (!localStorage.getItem("authUser")) {
+    //   router.push("/")
+    //   return
+    // }
 
-  const handleLogout = () => {
-    if (window.Nas?.io) {
-      window.Nas.io.logout()
-      router.push("/") // ✅ Redirect to homepage after logout
-    }
-  }
+    fetchSignals()
+  }, [])
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
-        <p>Loading authentication...</p>
-      </div>
-    )
-  }
-
-  if (!isAuthenticated) {
-    return null // prevent flashing the dashboard before redirect
-  }
-
+  // UI
   return (
-    <div className="min-h-screen bg-black text-white">
-      <div className="max-w-6xl mx-auto px-4 py-10">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">📊 Trading Signals Dashboard</h1>
-          <button
-            onClick={handleLogout}
-            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg"
-          >
-            Logout
-          </button>
-        </div>
+    <main className="bg-black text-white min-h-screen p-6">
+      <div className="flex flex-col md:flex-row md:justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-yellow-400 mb-4 md:mb-0">
+          📊 Trading Signals Dashboard
+        </h1>
 
-        <p className="text-gray-400 mb-8">
-          Welcome back! Use the filters to refine by pair, type, or date.  
-          Refresh manually anytime, or let it auto-refresh every 60 seconds.
-        </p>
-
-        <SignalsTable />
+        <button
+          onClick={fetchSignals}
+          className="bg-yellow-500 hover:bg-yellow-400 text-black px-5 py-2 rounded-lg font-semibold transition-all"
+        >
+          🔄 Refresh Signals
+        </button>
       </div>
-    </div>
+
+      {loading && (
+        <p className="text-center text-yellow-500 mt-10">Loading signals...</p>
+      )}
+
+      {error && (
+        <p className="text-center text-red-500 mt-6">{error}</p>
+      )}
+
+      {!loading && !error && (
+        <div className="overflow-x-auto bg-gray-900 rounded-xl p-4 shadow-lg">
+          <SignalsTable signals={signals} />
+        </div>
+      )}
+    </main>
   )
 }
