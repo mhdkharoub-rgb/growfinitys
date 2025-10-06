@@ -1,72 +1,46 @@
 // pages/dashboard.js
-import { useEffect, useState } from "react"
-import { supabase } from "../lib/supabase"
-import SignalsTable from "../components/SignalsTable"
-import { useRouter } from "next/router"
+import { useEffect, useState } from "react";
+import { supabase } from "../lib/supabase";
+import SignalsTable from "../components/SignalsTable";
 
 export default function Dashboard() {
-  const [signals, setSignals] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const router = useRouter()
+  const [signals, setSignals] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Fetch signals from Supabase
-  async function fetchSignals() {
+  const fetchSignals = async () => {
+    setLoading(true);
     try {
-      setLoading(true)
       const { data, error } = await supabase
         .from("signals")
         .select("*")
-        .order("created_at", { ascending: false })
-      if (error) throw error
-      setSignals(data || [])
+        .order("date", { ascending: false });
+      if (error) throw error;
+      setSignals(data);
     } catch (err) {
-      console.error("Error fetching signals:", err.message)
-      setError("Unable to load trading signals. Please try again.")
+      console.error("❌ Error fetching signals:", err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    // Optional auth check (placeholder)
-    // if (!localStorage.getItem("authUser")) {
-    //   router.push("/")
-    //   return
-    // }
+    fetchSignals();
+  }, []);
 
-    fetchSignals()
-  }, [])
-
-  // UI
   return (
-    <main className="bg-black text-white min-h-screen p-6">
-      <div className="flex flex-col md:flex-row md:justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-yellow-400 mb-4 md:mb-0">
-          📊 Trading Signals Dashboard
-        </h1>
+    <div className="min-h-screen bg-black text-white p-6">
+      <h1 className="text-3xl font-bold mb-4 text-yellow-400">
+        📊 Market Signals Dashboard
+      </h1>
+      <p className="mb-6 text-gray-300">
+        Live market insights powered by Growfinitys AI.
+      </p>
 
-        <button
-          onClick={fetchSignals}
-          className="bg-yellow-500 hover:bg-yellow-400 text-black px-5 py-2 rounded-lg font-semibold transition-all"
-        >
-          🔄 Refresh Signals
-        </button>
-      </div>
-
-      {loading && (
-        <p className="text-center text-yellow-500 mt-10">Loading signals...</p>
+      {loading ? (
+        <p>Loading signals...</p>
+      ) : (
+        <SignalsTable signals={signals} onRefresh={fetchSignals} />
       )}
-
-      {error && (
-        <p className="text-center text-red-500 mt-6">{error}</p>
-      )}
-
-      {!loading && !error && (
-        <div className="overflow-x-auto bg-gray-900 rounded-xl p-4 shadow-lg">
-          <SignalsTable signals={signals} />
-        </div>
-      )}
-    </main>
-  )
+    </div>
+  );
 }
