@@ -1,36 +1,61 @@
 // pages/api/auth/login.js
-import bcrypt from "bcryptjs"
-import cookie from "cookie"
-import { supabaseAdmin } from "../../../lib/supabase"
+import { supabase } from "../../../lib/supabase";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import cookie from "cookie";
+
+const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" })
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
 
-  const { email, password } = req.body
+  const { email, password } = req.body;
+
   try {
-    const { data, error } = await supabaseAdmin
+    // 1️⃣ Validate inputs
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password are required" });
+    }
+
+    // 2️⃣ Fetch user from Supabase
+    const { data: user, error } = await supabase
       .from("users")
-      .select("id, email, password")
+      .select("id, email, password_hash")
       .eq("email", email)
-      .single()
+      .single();
 
-    if (error || !data) return res.status(401).json({ error: "Invalid credentials" })
+    if (error || !user) {
+      return res.status(401).json({ error: "Invalid email or password" });
+    }
 
-    const isValid = await bcrypt.compare(password, data.password)
-    if (!isValid) return res.status(401).json({ error: "Invalid password" })
+    // 3️⃣ Compare hashed password
+    const validPassword = await bcrypt.compare(password, user.password_hash);
+    if (!validPassword) {
+      return res.status(401).json({ error: "Invalid email or password" });
+    }
 
-    res.setHeader(
-      "Set-Cookie",
-      cookie.serialize("user", JSON.stringify({ id: data.id, email: data.email }), {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-        maxAge: 7 * 24 * 60 * 60,
-        path: "/",
-      })
-    )
-    res.status(200).json({ message: "✅ Logged in successfully" })
+    // 4️⃣ Create JWT Token
+    const token = jwt.sign(
+      { userId: user.id, email: user.email },
+      JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    // 5️⃣ Set cookie
+    res.setHeader("Set-Cookie", cookie.serialize("session_token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+      sameSite: "strict",
+      path: "/",
+    }));
+
+    return res.status(200).json({ success: true, message: "Login successful" });
+
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    console.error("Login error:", err);
+    return res.status(500).json({ error: "Internal server error" });
   }
 }
