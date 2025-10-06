@@ -1,31 +1,36 @@
 // pages/dashboard.js
-import { useEffect, useState } from "react";
-import { supabase } from "../lib/supabase";
-import SignalsTable from "../components/SignalsTable";
+import { useEffect, useState } from "react"
+import dynamic from "next/dynamic"
+import { supabase } from "../lib/supabase"
+
+// Lazy load SignalsTable to avoid early circular reference
+const SignalsTable = dynamic(() => import("../components/SignalsTable"), {
+  ssr: false,
+})
 
 export default function Dashboard() {
-  const [signals, setSignals] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [signals, setSignals] = useState([])
+  const [loading, setLoading] = useState(true)
 
   const fetchSignals = async () => {
-    setLoading(true);
+    setLoading(true)
     try {
       const { data, error } = await supabase
         .from("signals")
         .select("*")
-        .order("date", { ascending: false });
-      if (error) throw error;
-      setSignals(data);
+        .order("date", { ascending: false })
+      if (error) throw error
+      setSignals(data)
     } catch (err) {
-      console.error("❌ Error fetching signals:", err);
+      console.error("❌ Error fetching signals:", err)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
-    fetchSignals();
-  }, []);
+    fetchSignals()
+  }, [])
 
   return (
     <div className="min-h-screen bg-black text-white p-6">
@@ -42,5 +47,5 @@ export default function Dashboard() {
         <SignalsTable signals={signals} onRefresh={fetchSignals} />
       )}
     </div>
-  );
+  )
 }
