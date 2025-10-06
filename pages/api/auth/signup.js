@@ -1,46 +1,48 @@
-import bcrypt from "bcryptjs"
-import { supabaseAdmin } from "../../../lib/supabase"
+// pages/api/auth/signup.js
+import { supabase } from "../../../lib/supabase";
+import bcrypt from "bcryptjs";
 
 export default async function handler(req, res) {
-  if (req.method !== "POST")
-    return res.status(405).json({ error: "Method not allowed" })
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
 
-  const { email, password } = req.body
-
-  if (!email || !password)
-    return res.status(400).json({ error: "Email and password are required" })
+  const { email, password } = req.body;
 
   try {
-    // 1️⃣ Check if the email already exists
-    const { data: existingUser } = await supabaseAdmin
+    // 1️⃣ Validate input
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password are required" });
+    }
+
+    // 2️⃣ Check if user already exists
+    const { data: existingUser, error: fetchError } = await supabase
       .from("users")
-      .select("*")
+      .select("email")
       .eq("email", email)
-      .maybeSingle()
+      .single();
 
-    if (existingUser)
-      return res.status(400).json({ error: "Email already registered" })
+    if (existingUser) {
+      return res.status(400).json({ error: "User already exists" });
+    }
 
-    // 2️⃣ Hash password
-    const hashedPassword = await bcrypt.hash(password, 10)
+    // 3️⃣ Hash password before saving
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 3️⃣ Insert new user
-    const { error } = await supabaseAdmin.from("users").insert([
-      {
-        email,
-        password: hashedPassword,
-        role: "member",
-        created_at: new Date(),
-      },
-    ])
+    // 4️⃣ Insert new user into Supabase
+    const { error: insertError } = await supabase
+      .from("users")
+      .insert([{ email, password_hash: hashedPassword }]);
 
-    if (error) throw error
+    if (insertError) {
+      console.error("❌ Insert Error:", insertError);
+      return res.status(500).json({ error: "Failed to register user" });
+    }
 
-    console.log("✅ New user created:", email)
+    return res.status(201).json({ success: true, message: "Signup successful" });
 
-    return res.status(200).json({ success: true, message: "User created" })
   } catch (err) {
-    console.error("❌ Signup error:", err)
-    return res.status(500).json({ error: "Internal Server Error" })
+    console.error("Signup error:", err);
+    return res.status(500).json({ error: "Internal server error" });
   }
 }
