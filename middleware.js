@@ -1,26 +1,24 @@
+// middleware.js
 import { NextResponse } from "next/server"
-import { supabase } from "./lib/supabase"
 
-export async function middleware(req) {
-  const sessionEmail = req.cookies.get("session_email")?.value
-  const url = req.nextUrl
+export function middleware(req) {
+  const { pathname } = req.nextUrl
+  const user = req.cookies.get("user")
 
-  if (url.pathname.startsWith("/dashboard") || url.pathname.startsWith("/api/signals")) {
-    if (!sessionEmail) {
-      return NextResponse.redirect(new URL("/", req.url))
-    }
+  // List of protected routes
+  const protectedRoutes = ["/dashboard"]
 
-    // Optionally check role
-    const { data: user } = await supabase
-      .from("users")
-      .select("role")
-      .eq("email", sessionEmail)
-      .single()
-
-    if (!user) {
-      return NextResponse.redirect(new URL("/", req.url))
-    }
+  // If trying to access a protected route without login
+  if (protectedRoutes.includes(pathname) && !user) {
+    const loginUrl = new URL("/login", req.url)
+    return NextResponse.redirect(loginUrl)
   }
 
+  // Allow everything else
   return NextResponse.next()
+}
+
+// Tell Next.js to run middleware on all routes
+export const config = {
+  matcher: ["/dashboard", "/api/:path*"],
 }
