@@ -17,25 +17,20 @@ export default function Navbar() {
           <a href="#how" className="hover:text-yellow-400 transition">How It Works</a>
         </div>
 
-        {/* Buttons Section */}
+        {/* Auth Buttons */}
         <div className="flex items-center space-x-4">
-          {/* Dashboard Button */}
           <Link
-            href="/dashboard"
+            href="/login"
             className="border border-yellow-500 text-yellow-500 font-semibold py-2 px-5 rounded-lg hover:bg-yellow-500 hover:text-black transition"
           >
-            Dashboard
+            Login
           </Link>
-
-          {/* Sign Up Button */}
-          <a
-            href="https://nas.io/growfinitys/zerolink/basic"
-            target="_blank"
-            rel="noreferrer"
+          <Link
+            href="/signup"
             className="bg-yellow-500 text-black font-semibold py-2 px-5 rounded-lg hover:bg-yellow-400 transition"
           >
             Sign Up
-          </a>
+          </Link>
         </div>
       </div>
     </nav>
