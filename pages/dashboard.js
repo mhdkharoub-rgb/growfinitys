@@ -4,9 +4,10 @@ import dynamic from "next/dynamic";
 import { supabase } from "../lib/supabase";
 import { verifyAuth } from "../lib/auth";
 
+// Lazy load the SignalsTable to avoid hydration issues
 const SignalsTable = dynamic(() => import("../components/SignalsTable"), { ssr: false });
 
-export default function Dashboard({ authorized }) {
+export default function Dashboard({ user }) {
   const [signals, setSignals] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -30,25 +31,56 @@ export default function Dashboard({ authorized }) {
     fetchSignals();
   }, []);
 
-  if (!authorized) {
+  if (!user) {
     if (typeof window !== "undefined") window.location.href = "/login";
     return <p className="text-white text-center mt-20">Redirecting to login...</p>;
   }
 
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    window.location.href = "/login";
+  };
+
   return (
     <div className="min-h-screen bg-black text-white p-6">
-      <h1 className="text-3xl font-bold mb-4 text-yellow-400">
-        📊 Market Signals Dashboard
-      </h1>
-      <p className="mb-6 text-gray-300">Live market insights powered by Growfinitys AI.</p>
-      {loading ? <p>Loading signals...</p> : <SignalsTable signals={signals} onRefresh={fetchSignals} />}
+      {/* Welcome Section */}
+      <div className="flex flex-col md:flex-row justify-between items-center mb-8 border-b border-gray-800 pb-4">
+        <div>
+          <h1 className="text-3xl font-bold text-yellow-400 mb-2">📊 Dashboard</h1>
+          <p className="text-gray-300">
+            Welcome back, <span className="text-yellow-300">{user.email}</span>
+          </p>
+          <p className="text-sm text-gray-400 mt-1">
+            Membership:{" "}
+            <span className="font-semibold text-yellow-500">
+              {user.plan || "Basic"} {/* Replace this with Nas.io data later */}
+            </span>
+          </p>
+        </div>
+
+        <button
+          onClick={handleLogout}
+          className="mt-4 md:mt-0 bg-transparent border border-yellow-500 text-yellow-500 font-semibold py-2 px-6 rounded-lg hover:bg-yellow-500 hover:text-black transition"
+        >
+          Logout
+        </button>
+      </div>
+
+      {loading ? (
+        <p>Loading signals...</p>
+      ) : (
+        <SignalsTable signals={signals} onRefresh={fetchSignals} />
+      )}
     </div>
   );
 }
 
+// ✅ Server-side authentication check
 export async function getServerSideProps({ req }) {
-  const user = verifyAuth(req);
+  const session = verifyAuth(req);
   return {
-    props: { authorized: !!user },
+    props: {
+      user: session || null,
+    },
   };
 }
