@@ -11,7 +11,7 @@ export default function AdminMembershipPanel() {
   const [search, setSearch] = useState("")
   const [sortBy, setSortBy] = useState("newest")
 
-  // Fetch all members
+  // 🔄 Fetch all members
   const fetchMembers = async () => {
     setLoading(true)
     const { data, error } = await supabase
@@ -26,11 +26,7 @@ export default function AdminMembershipPanel() {
     setLoading(false)
   }
 
-  useEffect(() => {
-    fetchMembers()
-  }, [])
-
-  // 🔍 Search + Sort Logic
+  // 🔍 Filter & Sort
   useEffect(() => {
     let filteredList = members.filter(
       (m) =>
@@ -53,7 +49,7 @@ export default function AdminMembershipPanel() {
     setFiltered(filteredList)
   }, [search, sortBy, members])
 
-  // ✏️ Update Plan
+  // ✏️ Update plan
   const handlePlanChange = async (email, newPlan) => {
     setSaving(true)
     const { error } = await supabase
@@ -65,7 +61,7 @@ export default function AdminMembershipPanel() {
     setSaving(false)
   }
 
-  // ➕ Add New Member
+  // ➕ Add member
   const handleAddMember = async () => {
     if (!newMember.email) return alert("Email is required.")
     setSaving(true)
@@ -79,6 +75,26 @@ export default function AdminMembershipPanel() {
     setSaving(false)
   }
 
+  // 🔔 Real-time subscription (Supabase)
+  useEffect(() => {
+    fetchMembers()
+    const channel = supabase
+      .channel("realtime:memberships")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "memberships" },
+        (payload) => {
+          console.log("📡 Real-time change detected:", payload)
+          fetchMembers()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [])
+
   if (loading) return <p>Loading members...</p>
 
   return (
@@ -86,7 +102,7 @@ export default function AdminMembershipPanel() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
         <h2 className="text-2xl font-bold text-yellow-400 mb-3 md:mb-0">
-          👑 Admin Panel — Manage Memberships
+          👑 Admin Panel — Manage Memberships (Live)
         </h2>
 
         <div className="flex items-center gap-3">
@@ -115,7 +131,7 @@ export default function AdminMembershipPanel() {
         </div>
       </div>
 
-      {/* Add New Member Form */}
+      {/* Add Form */}
       {showAddForm && (
         <div className="mb-6 bg-gray-800 p-4 rounded-lg border border-yellow-600">
           <h3 className="text-lg font-semibold text-yellow-400 mb-2">
