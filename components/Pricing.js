@@ -1,106 +1,70 @@
 // components/Pricing.js
-
 export default function Pricing() {
+  const tiers = [
+    {
+      name: "Basic",
+      price: "$29/mo",
+      btnMonthly: "https://nas.io/growfinitys/zerolink/basic",
+      btnYearly: "https://nas.io/growfinitys/zerolink/basic-yearly",
+      features: ["Daily summary", "2 signals/day", "Email alerts"],
+    },
+    {
+      name: "Pro",
+      price: "$59/mo",
+      btnMonthly: "https://nas.io/growfinitys/zerolink/pro",
+      btnYearly: "https://nas.io/growfinitys/zerolink/pro-yearly",
+      features: ["All Basic", "5–8 signals/day", "Priority alerts"],
+      highlight: true,
+    },
+    {
+      name: "VIP",
+      price: "$99/mo",
+      btnMonthly: "https://nas.io/growfinitys/zerolink/vip",
+      btnYearly: "https://nas.io/growfinitys/zerolink/vip-yearly",
+      features: ["All Pro", "DM support", "Weekly report"],
+    },
+  ]
+
   return (
-    <section id="pricing" className="py-20 bg-black text-white">
-      <div className="max-w-6xl mx-auto px-6">
-        <h2 className="text-4xl font-bold text-center mb-12">
-          Membership Plans
-        </h2>
+    <section id="pricing" className="max-w-7xl mx-auto px-6 py-16">
+      <h2 className="text-3xl font-bold text-yellow-500 mb-6">Pricing</h2>
 
-        <div className="grid md:grid-cols-3 gap-8">
-          {/* Basic Plan */}
-          <div className="bg-gray-900 rounded-xl p-8 shadow-lg text-center border border-yellow-500">
-            <h3 className="text-2xl font-semibold mb-4">Basic</h3>
-            <p className="text-4xl font-bold mb-6">$29<span className="text-lg">/mo</span></p>
-            <ul className="text-gray-300 mb-6 space-y-2">
-              <li>Daily Gold, Oil & USD signals</li>
-              <li>Basic Crypto Signals</li>
-              <li>Email alerts included</li>
+      <div className="grid md:grid-cols-3 gap-6">
+        {tiers.map((t) => (
+          <div
+            key={t.name}
+            className={`rounded-2xl p-6 border ${
+              t.highlight ? "border-yellow-500" : "border-gray-800"
+            } bg-gray-900`}
+          >
+            <h3 className="text-xl font-bold mb-2">{t.name}</h3>
+            <p className="text-gray-400 mb-4">{t.price}</p>
+            <ul className="text-sm text-gray-300 space-y-2 mb-6">
+              {t.features.map((f) => (
+                <li key={f}>• {f}</li>
+              ))}
             </ul>
-            {/* Monthly */}
-            <a
-              href="https://nas.io/growfinitys/zerolink/basic"
-              target="_blank"
-              rel="noreferrer"
-              className="block bg-yellow-500 text-black font-semibold py-3 px-6 rounded-lg hover:bg-yellow-400 transition mb-2"
-            >
-              Join Monthly
-            </a>
-            {/* Yearly */}
-            <a
-              href="https://nas.io/growfinitys/zerolink/basic-yearly"
-              target="_blank"
-              rel="noreferrer"
-              className="block bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold py-3 px-6 rounded-lg shadow-lg hover:from-yellow-300 hover:to-yellow-500 transition"
-            >
-              Save 2 Months – Join Yearly
-            </a>
-          </div>
 
-          {/* Pro Plan (Most Popular) */}
-          <div className="relative bg-gray-900 rounded-xl p-8 shadow-lg text-center border-2 border-yellow-500 transform scale-105">
-            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-yellow-500 text-black px-4 py-1 rounded-full text-sm font-semibold shadow-md">
-              ⭐ Most Popular
+            <div className="flex flex-col gap-3">
+              <a
+                href={t.btnMonthly}
+                target="_blank"
+                rel="noreferrer"
+                className="bg-yellow-500 text-black font-semibold py-2 px-4 rounded-lg text-center hover:bg-yellow-400 transition"
+              >
+                Join Monthly
+              </a>
+              <a
+                href={t.btnYearly}
+                target="_blank"
+                rel="noreferrer"
+                className="border border-yellow-500 text-yellow-500 font-semibold py-2 px-4 rounded-lg text-center hover:bg-yellow-500 hover:text-black transition"
+              >
+                Join Yearly
+              </a>
             </div>
-            <h3 className="text-2xl font-semibold mb-4 mt-4">Pro</h3>
-            <p className="text-4xl font-bold mb-6">$59<span className="text-lg">/mo</span></p>
-            <ul className="text-gray-300 mb-6 space-y-2">
-              <li>All Basic Features +</li>
-              <li>Advanced Forex Pairs</li>
-              <li>Premium Crypto Signals</li>
-              <li>Telegram/Email Alerts</li>
-            </ul>
-            {/* Monthly */}
-            <a
-              href="https://nas.io/growfinitys/zerolink/pro"
-              target="_blank"
-              rel="noreferrer"
-              className="block bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold py-4 px-8 rounded-lg shadow-lg hover:from-yellow-300 hover:to-yellow-500 transition transform hover:scale-105 mb-2"
-            >
-              🚀 Join Monthly
-            </a>
-            {/* Yearly */}
-            <a
-              href="https://nas.io/growfinitys/zerolink/pro-yearly"
-              target="_blank"
-              rel="noreferrer"
-              className="block bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold py-3 px-6 rounded-lg shadow-lg hover:from-yellow-300 hover:to-yellow-500 transition"
-            >
-              Save 2 Months – Join Yearly
-            </a>
           </div>
-
-          {/* VIP Plan */}
-          <div className="bg-gray-900 rounded-xl p-8 shadow-lg text-center border border-yellow-500">
-            <h3 className="text-2xl font-semibold mb-4">VIP</h3>
-            <p className="text-4xl font-bold mb-6">$99<span className="text-lg">/mo</span></p>
-            <ul className="text-gray-300 mb-6 space-y-2">
-              <li>All Pro Features +</li>
-              <li>1-on-1 Strategy Sessions</li>
-              <li>Priority Support</li>
-              <li>Exclusive Market Insights</li>
-            </ul>
-            {/* Monthly */}
-            <a
-              href="https://nas.io/growfinitys/zerolink/vip"
-              target="_blank"
-              rel="noreferrer"
-              className="block bg-yellow-500 text-black font-semibold py-3 px-6 rounded-lg hover:bg-yellow-400 transition mb-2"
-            >
-              Join Monthly
-            </a>
-            {/* Yearly */}
-            <a
-              href="https://nas.io/growfinitys/zerolink/vip-yearly"
-              target="_blank"
-              rel="noreferrer"
-              className="block bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold py-3 px-6 rounded-lg shadow-lg hover:from-yellow-300 hover:to-yellow-500 transition"
-            >
-              Save 2 Months – Join Yearly
-            </a>
-          </div>
-        </div>
+        ))}
       </div>
     </section>
   )
