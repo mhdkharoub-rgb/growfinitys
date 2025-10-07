@@ -14,7 +14,8 @@ export default function Dashboard() {
 
   useEffect(() => {
     const verifyUser = async () => {
-      const { data } = await supabase.auth.getSession()
+      const { data: { user } } = await supabase.auth.getUser()
+if (!user) router.push("/login")
       const user = data?.session?.user
       if (!user) {
         router.push("/login")
