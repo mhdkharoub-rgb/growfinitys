@@ -17,21 +17,30 @@ export default function Navbar() {
           <a href="#how" className="hover:text-yellow-400 transition">How It Works</a>
         </div>
 
-        {/* Auth Buttons */}
-        <div className="flex items-center space-x-4">
-          <Link
-            href="/login"
-            className="border border-yellow-500 text-yellow-500 font-semibold py-2 px-5 rounded-lg hover:bg-yellow-500 hover:text-black transition"
-          >
-            Login
-          </Link>
-          <Link
-            href="/signup"
-            className="bg-yellow-500 text-black font-semibold py-2 px-5 rounded-lg hover:bg-yellow-400 transition"
-          >
-            Sign Up
-          </Link>
-        </div>
+       {/* Buttons Section */}
+<div className="flex items-center space-x-4">
+  <Link
+    href="/dashboard"
+    className="border border-yellow-500 text-yellow-500 font-semibold py-2 px-5 rounded-lg hover:bg-yellow-500 hover:text-black transition"
+  >
+    Dashboard
+  </Link>
+
+  <Link
+    href="/login"
+    className="bg-yellow-500 text-black font-semibold py-2 px-5 rounded-lg hover:bg-yellow-400 transition"
+  >
+    Login
+  </Link>
+
+  <Link
+    href="/signup"
+    className="bg-transparent border border-yellow-500 text-yellow-500 font-semibold py-2 px-5 rounded-lg hover:bg-yellow-500 hover:text-black transition"
+  >
+    Sign Up
+  </Link>
+</div>
+
       </div>
     </nav>
   )
