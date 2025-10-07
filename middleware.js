@@ -1,24 +1,42 @@
-// middleware.js
+// /middleware.js
 import { NextResponse } from "next/server"
+import { createClient } from "@supabase/supabase-js"
 
-export function middleware(req) {
-  const { pathname } = req.nextUrl
-  const user = req.cookies.get("user")
+export async function middleware(req) {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  )
 
-  // List of protected routes
-  const protectedRoutes = ["/dashboard"]
+  const { data, error } = await supabase.auth.getUser()
 
-  // If trying to access a protected route without login
-  if (protectedRoutes.includes(pathname) && !user) {
-    const loginUrl = new URL("/login", req.url)
-    return NextResponse.redirect(loginUrl)
+  // Not logged in? → redirect to login page
+  if (error || !data?.user) {
+    return NextResponse.redirect(new URL("/login", req.url))
   }
 
-  // Allow everything else
+  const { user } = data
+  const { data: userRecord } = await supabase
+    .from("users")
+    .select("role")
+    .eq("email", user.email)
+    .single()
+
+  const isAdmin = userRecord?.role === "admin"
+
+  const adminRoutes = ["/admin", "/dashboard"]
+
+  if (adminRoutes.some((route) => req.nextUrl.pathname.startsWith(route))) {
+    if (!isAdmin) {
+      // Redirect non-admins to home or their dashboard
+      return NextResponse.redirect(new URL("/", req.url))
+    }
+  }
+
   return NextResponse.next()
 }
 
-// Tell Next.js to run middleware on all routes
+// Limit which routes use this middleware
 export const config = {
-  matcher: ["/dashboard", "/api/:path*"],
+  matcher: ["/admin/:path*", "/dashboard/:path*"],
 }
