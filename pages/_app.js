@@ -1,20 +1,20 @@
-import Head from "next/head"
-import "../styles/globals.css"
+// pages/_app.js
+import Head from "next/head";
+import "../styles/globals.css";
 
 export default function MyApp({ Component, pageProps }) {
   return (
     <>
       <Head>
-        <title>Growfinitys — AI Trading Signals</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Growfinitys</title>
         <meta
           name="description"
-          content="Premium AI-powered trading signals for Gold, Oil, Forex & Crypto."
+          content="Growfinitys – AI-powered market insights, signals, and analysis for traders."
         />
+        <link rel="icon" href="/favicon.ico" />
       </Head>
-      <div className="pt-[72px]">
-        <Component {...pageProps} />
-      </div>
+
+      <Component {...pageProps} />
     </>
-  )
+  );
 }
