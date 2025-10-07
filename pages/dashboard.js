@@ -1,4 +1,5 @@
 // pages/dashboard.js
+import AdminMembershipPanel from "../components/AdminMembershipPanel"
 import { useEffect, useState } from "react"
 import dynamic from "next/dynamic"
 import { supabase } from "../lib/supabase"
@@ -85,7 +86,9 @@ export default function Dashboard({ user }) {
       ) : (
         <SignalsTable signals={signals} onRefresh={fetchSignals} />
       )}
-    </div>
+    {user.email === "youradmin@email.com" && <AdminMembershipPanel />}
+
+        </div>
   )
 }
 
