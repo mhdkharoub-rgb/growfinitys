@@ -40,6 +40,15 @@ export default function Navbar() {
     Sign Up
   </Link>
 </div>
+<button
+  onClick={async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    window.location.href = "/login";
+  }}
+  className="border border-yellow-500 text-yellow-500 font-semibold py-2 px-5 rounded-lg hover:bg-yellow-500 hover:text-black transition"
+>
+  Logout
+</button>
 
       </div>
     </nav>
