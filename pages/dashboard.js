@@ -1,32 +1,36 @@
+// pages/dashboard.js
 import { useEffect, useState } from "react"
-import dynamic from "next/dynamic"
 import { useRouter } from "next/router"
 import { supabase } from "../lib/supabase"
+import dynamic from "next/dynamic"
 
-// Lazy load to avoid build-time circular references
-const SignalsTable = dynamic(() => import("../components/SignalsTable"), { ssr: false })
+// Lazy load table (optional)
+const SignalsTable = dynamic(() => import("../components/SignalsTable"), {
+  ssr: false,
+})
 
 export default function Dashboard() {
   const router = useRouter()
+  const [user, setUser] = useState(null)
   const [signals, setSignals] = useState([])
   const [loading, setLoading] = useState(true)
-  const [checkingAuth, setCheckingAuth] = useState(true)
 
+  // ✅ Check user session on mount
   useEffect(() => {
-    const verifyUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-if (!user) router.push("/login")
-      const user = data?.session?.user
+    const checkUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
       if (!user) {
         router.push("/login")
-      } else {
-        await fetchSignals()
+        return
       }
-      setCheckingAuth(false)
+      setUser(user)
     }
-    verifyUser()
-  }, [])
+    checkUser()
+  }, [router])
 
+  // ✅ Fetch signals data
   const fetchSignals = async () => {
     setLoading(true)
     try {
@@ -35,7 +39,7 @@ if (!user) router.push("/login")
         .select("*")
         .order("date", { ascending: false })
       if (error) throw error
-      setSignals(data)
+      setSignals(data || [])
     } catch (err) {
       console.error("❌ Error fetching signals:", err)
     } finally {
@@ -43,27 +47,28 @@ if (!user) router.push("/login")
     }
   }
 
-  if (checkingAuth)
-    return (
-      <div className="min-h-screen bg-black text-yellow-400 flex items-center justify-center">
-        Checking session...
-      </div>
-    )
+  useEffect(() => {
+    if (user) fetchSignals()
+  }, [user])
 
   return (
     <div className="min-h-screen bg-black text-white p-6">
-      <h1 className="text-3xl font-bold mb-4 text-yellow-400">
-        📊 Market Signals Dashboard
-      </h1>
-      <p className="mb-6 text-gray-300">
-        Exclusive AI-powered trading insights for Growfinitys members.
-      </p>
+      <div className="max-w-6xl mx-auto">
+        <h1 className="text-3xl font-bold mb-4 text-yellow-400">
+          📊 Market Signals Dashboard
+        </h1>
+        <p className="mb-6 text-gray-300">
+          Welcome {user?.email}! Here are your live Growfinitys AI insights.
+        </p>
 
-      {loading ? (
-        <p>Loading signals...</p>
-      ) : (
-        <SignalsTable signals={signals} onRefresh={fetchSignals} />
-      )}
+        {loading ? (
+          <p>Loading signals...</p>
+        ) : signals.length > 0 ? (
+          <SignalsTable signals={signals} onRefresh={fetchSignals} />
+        ) : (
+          <p className="text-gray-500">No signals found yet.</p>
+        )}
+      </div>
     </div>
   )
 }
