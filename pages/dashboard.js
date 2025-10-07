@@ -86,7 +86,7 @@ export default function Dashboard({ user }) {
       ) : (
         <SignalsTable signals={signals} onRefresh={fetchSignals} />
       )}
-    {user.email === "youradmin@email.com" && <AdminMembershipPanel />}
+    {user.email === "mhdkharoub@gmail.com" && <AdminMembershipPanel />}
 
         </div>
   )
