@@ -4,7 +4,6 @@ import { useRouter } from "next/router"
 import { supabase } from "../lib/supabase"
 import dynamic from "next/dynamic"
 
-// Lazy load table (optional)
 const SignalsTable = dynamic(() => import("../components/SignalsTable"), {
   ssr: false,
 })
@@ -15,19 +14,17 @@ export default function Dashboard() {
   const [signals, setSignals] = useState([])
   const [loading, setLoading] = useState(true)
 
-  // ✅ Check user session on mount
+  // ✅ Check Supabase authentication session
   useEffect(() => {
-    const checkUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (!user) {
+    const verifyUser = async () => {
+      const { data, error } = await supabase.auth.getUser()
+      if (error || !data?.user) {
         router.push("/login")
         return
       }
-      setUser(user)
+      setUser(data.user)
     }
-    checkUser()
+    verifyUser()
   }, [router])
 
   // ✅ Fetch signals data
@@ -58,7 +55,7 @@ export default function Dashboard() {
           📊 Market Signals Dashboard
         </h1>
         <p className="mb-6 text-gray-300">
-          Welcome {user?.email}! Here are your live Growfinitys AI insights.
+          {user ? `Welcome, ${user.email}` : "Checking session..."}
         </p>
 
         {loading ? (
