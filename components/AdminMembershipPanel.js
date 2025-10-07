@@ -1,13 +1,15 @@
-// components/AdminMembershipPanel.js
 import { useState, useEffect } from "react"
 import { supabase } from "../lib/supabase"
 
 export default function AdminMembershipPanel() {
   const [members, setMembers] = useState([])
+  const [filtered, setFiltered] = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [newMember, setNewMember] = useState({ email: "", plan: "Basic" })
   const [showAddForm, setShowAddForm] = useState(false)
+  const [newMember, setNewMember] = useState({ email: "", plan: "Basic" })
+  const [search, setSearch] = useState("")
+  const [sortBy, setSortBy] = useState("newest")
 
   // Fetch all members
   const fetchMembers = async () => {
@@ -17,7 +19,10 @@ export default function AdminMembershipPanel() {
       .select("*")
       .order("created_at", { ascending: false })
     if (error) console.error("❌ Error loading members:", error)
-    else setMembers(data)
+    else {
+      setMembers(data)
+      setFiltered(data)
+    }
     setLoading(false)
   }
 
@@ -25,7 +30,30 @@ export default function AdminMembershipPanel() {
     fetchMembers()
   }, [])
 
-  // Handle plan update
+  // 🔍 Search + Sort Logic
+  useEffect(() => {
+    let filteredList = members.filter(
+      (m) =>
+        m.email.toLowerCase().includes(search.toLowerCase()) ||
+        m.plan.toLowerCase().includes(search.toLowerCase())
+    )
+
+    if (sortBy === "newest") {
+      filteredList.sort(
+        (a, b) => new Date(b.created_at) - new Date(a.created_at)
+      )
+    } else if (sortBy === "oldest") {
+      filteredList.sort(
+        (a, b) => new Date(a.created_at) - new Date(b.created_at)
+      )
+    } else if (sortBy === "plan") {
+      filteredList.sort((a, b) => a.plan.localeCompare(b.plan))
+    }
+
+    setFiltered(filteredList)
+  }, [search, sortBy, members])
+
+  // ✏️ Update Plan
   const handlePlanChange = async (email, newPlan) => {
     setSaving(true)
     const { error } = await supabase
@@ -37,14 +65,13 @@ export default function AdminMembershipPanel() {
     setSaving(false)
   }
 
-  // Add new member
+  // ➕ Add New Member
   const handleAddMember = async () => {
     if (!newMember.email) return alert("Email is required.")
     setSaving(true)
     const { error } = await supabase.from("memberships").insert([newMember])
-    if (error) {
-      alert("❌ Error adding member: " + error.message)
-    } else {
+    if (error) alert("❌ Error adding member: " + error.message)
+    else {
       setNewMember({ email: "", plan: "Basic" })
       setShowAddForm(false)
       await fetchMembers()
@@ -56,16 +83,36 @@ export default function AdminMembershipPanel() {
 
   return (
     <div className="mt-10 bg-gray-900 rounded-lg p-6 shadow-lg">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold text-yellow-400">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
+        <h2 className="text-2xl font-bold text-yellow-400 mb-3 md:mb-0">
           👑 Admin Panel — Manage Memberships
         </h2>
-        <button
-          onClick={() => setShowAddForm(!showAddForm)}
-          className="bg-yellow-500 text-black font-semibold px-4 py-2 rounded-lg hover:bg-yellow-400 transition"
-        >
-          {showAddForm ? "Cancel" : "+ Add New Member"}
-        </button>
+
+        <div className="flex items-center gap-3">
+          <input
+            type="text"
+            placeholder="Search by email or plan..."
+            className="bg-black border border-gray-700 rounded-lg px-3 py-2 text-white text-sm"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="bg-black text-yellow-400 border border-yellow-500 rounded-lg px-3 py-2 text-sm"
+          >
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
+            <option value="plan">Plan Name</option>
+          </select>
+          <button
+            onClick={() => setShowAddForm(!showAddForm)}
+            className="bg-yellow-500 text-black font-semibold px-4 py-2 rounded-lg hover:bg-yellow-400 transition text-sm"
+          >
+            {showAddForm ? "Cancel" : "+ Add New Member"}
+          </button>
+        </div>
       </div>
 
       {/* Add New Member Form */}
@@ -110,45 +157,47 @@ export default function AdminMembershipPanel() {
       )}
 
       {/* Members Table */}
-      <table className="min-w-full border border-gray-700 rounded-lg">
-        <thead>
-          <tr className="bg-gray-800 text-yellow-400">
-            <th className="py-2 px-3 text-left">Email</th>
-            <th className="py-2 px-3 text-left">Plan</th>
-            <th className="py-2 px-3 text-left">Created At</th>
-            <th className="py-2 px-3 text-left">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {members.map((m) => (
-            <tr
-              key={m.email}
-              className="border-t border-gray-700 hover:bg-gray-800 transition"
-            >
-              <td className="py-2 px-3">{m.email}</td>
-              <td className="py-2 px-3">{m.plan}</td>
-              <td className="py-2 px-3">
-                {new Date(m.created_at).toLocaleDateString()}
-              </td>
-              <td className="py-2 px-3">
-                <select
-                  className="bg-black text-yellow-400 border border-yellow-500 rounded px-2 py-1"
-                  value={m.plan}
-                  onChange={(e) => handlePlanChange(m.email, e.target.value)}
-                  disabled={saving}
-                >
-                  <option>Basic</option>
-                  <option>Pro</option>
-                  <option>VIP</option>
-                  <option>Basic-Yearly</option>
-                  <option>Pro-Yearly</option>
-                  <option>VIP-Yearly</option>
-                </select>
-              </td>
+      <div className="overflow-x-auto">
+        <table className="min-w-full border border-gray-700 rounded-lg text-sm md:text-base">
+          <thead>
+            <tr className="bg-gray-800 text-yellow-400">
+              <th className="py-2 px-3 text-left">Email</th>
+              <th className="py-2 px-3 text-left">Plan</th>
+              <th className="py-2 px-3 text-left">Created At</th>
+              <th className="py-2 px-3 text-left">Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {filtered.map((m) => (
+              <tr
+                key={m.email}
+                className="border-t border-gray-700 hover:bg-gray-800 transition"
+              >
+                <td className="py-2 px-3">{m.email}</td>
+                <td className="py-2 px-3">{m.plan}</td>
+                <td className="py-2 px-3">
+                  {new Date(m.created_at).toLocaleDateString()}
+                </td>
+                <td className="py-2 px-3">
+                  <select
+                    className="bg-black text-yellow-400 border border-yellow-500 rounded px-2 py-1"
+                    value={m.plan}
+                    onChange={(e) => handlePlanChange(m.email, e.target.value)}
+                    disabled={saving}
+                  >
+                    <option>Basic</option>
+                    <option>Pro</option>
+                    <option>VIP</option>
+                    <option>Basic-Yearly</option>
+                    <option>Pro-Yearly</option>
+                    <option>VIP-Yearly</option>
+                  </select>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }
