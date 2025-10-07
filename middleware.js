@@ -26,12 +26,13 @@ export async function middleware(req) {
 
   const adminRoutes = ["/admin", "/dashboard"]
 
-  if (adminRoutes.some((route) => req.nextUrl.pathname.startsWith(route))) {
-    if (!isAdmin) {
-      // Redirect non-admins to home or their dashboard
-      return NextResponse.redirect(new URL("/", req.url))
-    }
+ if (adminRoutes.some((route) => req.nextUrl.pathname.startsWith(route))) {
+  if (!isAdmin) {
+    // Show the restricted access page instead of redirect
+    return NextResponse.rewrite(new URL("/restricted", req.url))
   }
+}
+
 
   return NextResponse.next()
 }
