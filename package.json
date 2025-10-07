@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.43.4",
+    "@supabase/auth-helpers-nextjs": "^0.8.7",
     "bcryptjs": "^2.4.3",
     "cookie": "^0.6.0",
     "jsonwebtoken": "^9.0.2",
