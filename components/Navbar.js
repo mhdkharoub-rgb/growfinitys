@@ -1,41 +1,39 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { supabase } from "../lib/supabase"
 import { useRouter } from "next/router"
+import { supabase } from "../lib/supabase"
+import LogoutButton from "./LogoutButton"
 
 export default function Navbar() {
-  const [user, setUser] = useState(null)
   const router = useRouter()
+  const [session, setSession] = useState(null)
+  const [loading, setLoading] = useState(true)
 
+  // ✅ Check session on mount
   useEffect(() => {
-    // Check current auth session
-    const getSession = async () => {
+    const checkSession = async () => {
       const { data } = await supabase.auth.getSession()
-      setUser(data.session?.user || null)
+      setSession(data.session)
+      setLoading(false)
     }
 
-    getSession()
+    checkSession()
 
-    // Listen for login/logout events
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user || null)
+    // ✅ Listen for login/logout changes
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
     })
 
     return () => {
-      authListener.subscription.unsubscribe()
+      listener.subscription.unsubscribe()
     }
   }, [])
 
-  const handleLogout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" })
-    router.push("/")
-  }
-
   return (
-    <nav className="bg-black text-white fixed top-0 left-0 w-full z-50 shadow-md">
+    <nav className="bg-black text-white fixed top-0 left-0 w-full z-50 shadow-md border-b border-gray-800">
       <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
         {/* Logo */}
-        <Link href="/" className="text-2xl font-bold text-yellow-500">
+        <Link href="/" className="text-2xl font-bold text-yellow-500 hover:text-yellow-400 transition">
           Growfinitys
         </Link>
 
@@ -46,40 +44,37 @@ export default function Navbar() {
           <a href="#how" className="hover:text-yellow-400 transition">How It Works</a>
         </div>
 
-        {/* Dynamic Buttons */}
-        <div className="flex items-center space-x-4">
-          {!user ? (
-            <>
-              <Link
-                href="/login"
-                className="border border-yellow-500 text-yellow-500 font-semibold py-2 px-5 rounded-lg hover:bg-yellow-500 hover:text-black transition"
-              >
-                Login
-              </Link>
-              <Link
-                href="/signup"
-                className="bg-yellow-500 text-black font-semibold py-2 px-5 rounded-lg hover:bg-yellow-400 transition"
-              >
-                Sign Up
-              </Link>
-            </>
-          ) : (
-            <>
-              <Link
-                href="/dashboard"
-                className="border border-yellow-500 text-yellow-500 font-semibold py-2 px-5 rounded-lg hover:bg-yellow-500 hover:text-black transition"
-              >
-                Dashboard
-              </Link>
-              <button
-                onClick={handleLogout}
-                className="bg-red-600 text-white font-semibold py-2 px-5 rounded-lg hover:bg-red-500 transition"
-              >
-                Logout
-              </button>
-            </>
-          )}
-        </div>
+        {/* Right Section */}
+        {!loading && (
+          <div className="flex items-center space-x-4">
+            {session ? (
+              <>
+                <Link
+                  href="/dashboard"
+                  className="border border-yellow-500 text-yellow-500 font-semibold py-2 px-5 rounded-lg hover:bg-yellow-500 hover:text-black transition"
+                >
+                  Dashboard
+                </Link>
+                <LogoutButton />
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="border border-yellow-500 text-yellow-500 font-semibold py-2 px-5 rounded-lg hover:bg-yellow-500 hover:text-black transition"
+                >
+                  Login
+                </Link>
+                <Link
+                  href="/signup"
+                  className="bg-yellow-500 text-black font-semibold py-2 px-5 rounded-lg hover:bg-yellow-400 transition"
+                >
+                  Sign Up
+                </Link>
+              </>
+            )}
+          </div>
+        )}
       </div>
     </nav>
   )
