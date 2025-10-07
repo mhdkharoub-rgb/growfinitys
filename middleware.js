@@ -3,41 +3,27 @@ import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 
 export async function middleware(req) {
+  const res = NextResponse.next()
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    { global: { headers: { Authorization: req.headers.get("Authorization") } } }
   )
 
-  const { data, error } = await supabase.auth.getUser()
+  const { data } = await supabase.auth.getSession()
+  const user = data?.session?.user
 
-  // Not logged in? → redirect to login page
-  if (error || !data?.user) {
-    return NextResponse.redirect(new URL("/login", req.url))
+  const protectedRoutes = ["/dashboard"]
+
+  if (protectedRoutes.some((path) => req.nextUrl.pathname.startsWith(path)) && !user) {
+    const loginUrl = new URL("/login", req.url)
+    return NextResponse.redirect(loginUrl)
   }
 
-  const { user } = data
-  const { data: userRecord } = await supabase
-    .from("users")
-    .select("role")
-    .eq("email", user.email)
-    .single()
-
-  const isAdmin = userRecord?.role === "admin"
-
-  const adminRoutes = ["/admin", "/dashboard"]
-
- if (adminRoutes.some((route) => req.nextUrl.pathname.startsWith(route))) {
-  if (!isAdmin) {
-    // Show the restricted access page instead of redirect
-    return NextResponse.rewrite(new URL("/restricted", req.url))
-  }
+  return res
 }
 
-
-  return NextResponse.next()
-}
-
-// Limit which routes use this middleware
+// Apply middleware to specific routes
 export const config = {
-  matcher: ["/admin/:path*", "/dashboard/:path*"],
+  matcher: ["/dashboard/:path*", "/api/dashboard/:path*"],
 }
