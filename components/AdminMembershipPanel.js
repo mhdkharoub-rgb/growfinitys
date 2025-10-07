@@ -10,10 +10,33 @@ export default function AdminMembershipPanel() {
   const [newMember, setNewMember] = useState({ email: "", plan: "Basic" })
   const [search, setSearch] = useState("")
   const [sortBy, setSortBy] = useState("newest")
+  const [user, setUser] = useState(null)
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  // 🧠 Check if logged-in user is admin
+  const checkAdmin = async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      setUser(null)
+      setIsAdmin(false)
+      setLoading(false)
+      return
+    }
+
+    setUser(user)
+    const { data, error } = await supabase
+      .from("users")
+      .select("role")
+      .eq("email", user.email)
+      .single()
+
+    if (error) console.error("❌ Error fetching user role:", error)
+    setIsAdmin(data?.role === "admin")
+    setLoading(false)
+  }
 
   // 🔄 Fetch all members
   const fetchMembers = async () => {
-    setLoading(true)
     const { data, error } = await supabase
       .from("memberships")
       .select("*")
@@ -23,10 +46,29 @@ export default function AdminMembershipPanel() {
       setMembers(data)
       setFiltered(data)
     }
-    setLoading(false)
   }
 
-  // 🔍 Filter & Sort
+  // 🧠 On mount: check admin + setup realtime listener
+  useEffect(() => {
+    checkAdmin()
+    fetchMembers()
+
+    const channel = supabase
+      .channel("realtime:memberships")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "memberships" },
+        (payload) => {
+          console.log("📡 Live change:", payload)
+          fetchMembers()
+        }
+      )
+      .subscribe()
+
+    return () => supabase.removeChannel(channel)
+  }, [])
+
+  // 🔍 Search + Sort
   useEffect(() => {
     let filteredList = members.filter(
       (m) =>
@@ -75,31 +117,31 @@ export default function AdminMembershipPanel() {
     setSaving(false)
   }
 
-  // 🔔 Real-time subscription (Supabase)
-  useEffect(() => {
-    fetchMembers()
-    const channel = supabase
-      .channel("realtime:memberships")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "memberships" },
-        (payload) => {
-          console.log("📡 Real-time change detected:", payload)
-          fetchMembers()
-        }
-      )
-      .subscribe()
+  // 🧱 UI
+  if (loading) return <p className="text-gray-300">Loading...</p>
 
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [])
+  if (!user)
+    return (
+      <div className="min-h-screen flex flex-col justify-center items-center bg-black text-white">
+        <h2 className="text-2xl font-bold mb-2">🔒 Please sign in first</h2>
+        <p className="text-gray-400 text-sm">
+          You need to be logged in to view this page.
+        </p>
+      </div>
+    )
 
-  if (loading) return <p>Loading members...</p>
+  if (!isAdmin)
+    return (
+      <div className="min-h-screen flex flex-col justify-center items-center bg-black text-white">
+        <h2 className="text-2xl font-bold mb-2">🚫 Restricted Access</h2>
+        <p className="text-gray-400 text-sm">
+          This area is for administrators only.
+        </p>
+      </div>
+    )
 
   return (
     <div className="mt-10 bg-gray-900 rounded-lg p-6 shadow-lg">
-      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
         <h2 className="text-2xl font-bold text-yellow-400 mb-3 md:mb-0">
           👑 Admin Panel — Manage Memberships (Live)
@@ -172,7 +214,7 @@ export default function AdminMembershipPanel() {
         </div>
       )}
 
-      {/* Members Table */}
+      {/* Table */}
       <div className="overflow-x-auto">
         <table className="min-w-full border border-gray-700 rounded-lg text-sm md:text-base">
           <thead>
