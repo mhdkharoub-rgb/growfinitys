@@ -37,7 +37,9 @@ export default function Login() {
       }
 
       setMessage("✅ Login successful! Redirecting to dashboard...")
-      setTimeout(() => router.push("/dashboard"), 1200)
+      setTimeout(() => {
+  window.location.href = "/dashboard"
+}, 1000)
     } catch (err) {
       console.error("Login error:", err)
       setError(err.message)
