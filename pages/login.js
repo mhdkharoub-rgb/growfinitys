@@ -1,3 +1,4 @@
+// pages/login.js
 import { useState } from "react"
 import { useRouter } from "next/router"
 import { supabase } from "../lib/supabase"
@@ -6,8 +7,8 @@ export default function Login() {
   const router = useRouter()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
 
   const handleLogin = async (e) => {
     e.preventDefault()
@@ -21,45 +22,46 @@ export default function Login() {
 
     if (error) {
       setError(error.message)
-    } else {
-      router.push("/dashboard")
+      setLoading(false)
+      return
     }
 
-    setLoading(false)
+    // Redirect after login
+    router.push("/dashboard")
   }
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center px-4">
-      <div className="bg-gray-900 p-8 rounded-2xl shadow-xl w-full max-w-md">
-        <h2 className="text-3xl font-bold text-yellow-500 text-center mb-6">
-          Welcome Back 👋
-        </h2>
-        <p className="text-gray-400 text-center mb-8">
-          Log in to access your trading signals dashboard
+    <div className="min-h-screen bg-black flex items-center justify-center text-white px-4">
+      <div className="bg-zinc-900 p-8 rounded-2xl shadow-2xl max-w-md w-full">
+        <h1 className="text-3xl font-bold text-yellow-400 mb-4 text-center">
+          Growfinitys Login
+        </h1>
+        <p className="text-gray-400 mb-6 text-center">
+          Access your dashboard and AI tools
         </p>
 
-        <form onSubmit={handleLogin} className="space-y-6">
+        <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label className="block text-gray-300 mb-2">Email</label>
+            <label className="block text-gray-300 mb-1">Email</label>
             <input
               type="email"
-              required
+              className="w-full px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 focus:outline-none focus:border-yellow-400"
+              placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-yellow-500"
-              placeholder="you@example.com"
+              required
             />
           </div>
 
           <div>
-            <label className="block text-gray-300 mb-2">Password</label>
+            <label className="block text-gray-300 mb-1">Password</label>
             <input
               type="password"
-              required
+              className="w-full px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 focus:outline-none focus:border-yellow-400"
+              placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-yellow-500"
-              placeholder="••••••••"
+              required
             />
           </div>
 
@@ -70,16 +72,19 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-yellow-500 text-black font-semibold py-3 rounded-lg hover:bg-yellow-400 transition"
+            className="w-full py-2 bg-yellow-500 hover:bg-yellow-400 text-black font-semibold rounded-lg transition"
           >
-            {loading ? "Logging in..." : "Log In"}
+            {loading ? "Logging in..." : "Login"}
           </button>
         </form>
 
-        <p className="text-gray-400 text-sm text-center mt-6">
+        <p className="text-gray-400 text-sm text-center mt-4">
           Don’t have an account?{" "}
-          <a href="/signup" className="text-yellow-500 hover:underline">
-            Sign Up
+          <a
+            href="/signup"
+            className="text-yellow-400 hover:underline font-medium"
+          >
+            Sign up
           </a>
         </p>
       </div>
