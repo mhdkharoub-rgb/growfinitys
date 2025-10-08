@@ -8,8 +8,9 @@ export default function Dashboard() {
   const [signals, setSignals] = useState([]);
   const [lastUpdated, setLastUpdated] = useState("");
   const [loading, setLoading] = useState(false);
+  const [tier, setTier] = useState("Basic"); // Default fallback
 
-  // 🔒 Verify user and load signals
+  // 🔐 Verify user and load data
   useEffect(() => {
     const checkUser = async () => {
       const { data } = await supabase.auth.getUser();
@@ -18,18 +19,32 @@ export default function Dashboard() {
         return;
       }
       setUser(data.user);
+      await fetchUserTier(data.user.id);
       fetchSignals();
     };
     checkUser();
   }, []);
 
-  // 🔄 Auto-refresh every 60 seconds
+  // ♻️ Auto-refresh every 60s
   useEffect(() => {
     const interval = setInterval(() => {
       fetchSignals();
-    }, 60000); // 60 000 ms = 60 s
+    }, 60000);
     return () => clearInterval(interval);
   }, []);
+
+  const fetchUserTier = async (userId) => {
+    // fetch from Supabase table 'profiles' or 'subscriptions'
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("membership_tier")
+      .eq("id", userId)
+      .single();
+
+    if (!error && data?.membership_tier) {
+      setTier(data.membership_tier);
+    }
+  };
 
   const fetchSignals = async () => {
     setLoading(true);
@@ -40,7 +55,12 @@ export default function Dashboard() {
 
     if (error) console.error(error);
     else {
-      setSignals(data);
+      // apply access limits
+      let filtered = data;
+      if (tier === "Basic") filtered = data.slice(0, 2);
+      else if (tier === "Pro") filtered = data.slice(0, 8);
+
+      setSignals(filtered);
       const now = new Date();
       setLastUpdated(
         now.toLocaleString("en-US", {
@@ -62,16 +82,31 @@ export default function Dashboard() {
 
   if (!user) return null;
 
+  const tierColors = {
+    Basic: "bg-gray-700 text-gray-200",
+    Pro: "bg-purple-600 text-white",
+    VIP: "bg-yellow-400 text-black font-semibold",
+  };
+
   return (
     <div className="min-h-screen bg-black text-white p-6">
       <div className="max-w-5xl mx-auto">
-        <h1 className="text-2xl font-bold mb-2">👋 Welcome, {user.email}</h1>
-        <p className="text-gray-400 mb-6">
-          You’re now logged in to <span className="text-yellow-400">Growfinitys Dashboard</span>.
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold mb-1">👋 Welcome, {user.email}</h1>
+            <p className="text-gray-400 mb-3">
+              You’re now logged in to <span className="text-yellow-400">Growfinitys Dashboard</span>.
+            </p>
+          </div>
+
+          {/* 🏆 Tier Badge */}
+          <span className={`px-4 py-2 rounded-full text-sm ${tierColors[tier]}`}>
+            {tier} Member
+          </span>
+        </div>
 
         {/* ✅ Header + Refresh */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mt-6 mb-4">
           <h2 className="text-xl font-semibold text-yellow-400">Daily Trading Signals</h2>
           <div className="flex items-center gap-3">
             <p className="text-gray-400 text-sm">
@@ -87,7 +122,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* ✅ Signals Table */}
+        {/* 📊 Signals Table */}
         <div className="overflow-x-auto border border-gray-700 rounded-lg">
           <table className="w-full border-collapse text-sm">
             <thead>
@@ -106,7 +141,11 @@ export default function Dashboard() {
                 <tr key={i} className="border-b border-gray-700 hover:bg-gray-800/60">
                   <td className="p-2">{new Date(s.date).toLocaleDateString()}</td>
                   <td className="p-2">{s.symbol}</td>
-                  <td className={`p-2 font-semibold ${s.action === "BUY" ? "text-green-400" : "text-red-400"}`}>
+                  <td
+                    className={`p-2 font-semibold ${
+                      s.action === "BUY" ? "text-green-400" : "text-red-400"
+                    }`}
+                  >
                     {s.action}
                   </td>
                   <td className="p-2 text-orange-400">{s.entry_price?.toFixed(2)}</td>
@@ -119,7 +158,7 @@ export default function Dashboard() {
           </table>
         </div>
 
-        {/* ✅ Logout */}
+        {/* 🚪 Logout */}
         <div className="mt-6 text-center">
           <button
             onClick={handleLogout}
