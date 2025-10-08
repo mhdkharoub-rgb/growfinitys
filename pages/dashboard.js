@@ -7,6 +7,7 @@ export default function Dashboard() {
   const [user, setUser] = useState(null);
   const [signals, setSignals] = useState([]);
   const [lastUpdated, setLastUpdated] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -18,11 +19,11 @@ export default function Dashboard() {
       setUser(data.user);
       fetchSignals();
     };
-
     checkUser();
   }, []);
 
   const fetchSignals = async () => {
+    setLoading(true);
     const { data, error } = await supabase
       .from("signals")
       .select("*")
@@ -32,14 +33,17 @@ export default function Dashboard() {
     else {
       setSignals(data);
       const now = new Date();
-      setLastUpdated(now.toLocaleString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      }));
+      setLastUpdated(
+        now.toLocaleString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        })
+      );
     }
+    setLoading(false);
   };
 
   const handleLogout = async () => {
@@ -57,12 +61,21 @@ export default function Dashboard() {
           You’re now logged in to <span className="text-yellow-400">Growfinitys Dashboard</span>.
         </p>
 
-        {/* ✅ Last Updated Time */}
+        {/* ✅ Header + Refresh */}
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold text-yellow-400">Daily Trading Signals</h2>
-          <p className="text-gray-400 text-sm">
-            Last Updated: {lastUpdated || "Loading..."}
-          </p>
+          <div className="flex items-center gap-3">
+            <p className="text-gray-400 text-sm">
+              Last Updated: {lastUpdated || "Loading..."}
+            </p>
+            <button
+              onClick={fetchSignals}
+              disabled={loading}
+              className="bg-yellow-500 hover:bg-yellow-600 text-black px-3 py-1.5 rounded-lg text-sm font-semibold transition"
+            >
+              {loading ? "Refreshing..." : "🔄 Refresh"}
+            </button>
+          </div>
         </div>
 
         {/* ✅ Signals Table */}
@@ -97,6 +110,7 @@ export default function Dashboard() {
           </table>
         </div>
 
+        {/* ✅ Logout */}
         <div className="mt-6 text-center">
           <button
             onClick={handleLogout}
