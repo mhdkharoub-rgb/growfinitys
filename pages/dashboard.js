@@ -15,17 +15,15 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
 
   // ✅ Check Supabase authentication session
-  useEffect(() => {
-    const verifyUser = async () => {
-      const { data, error } = await supabase.auth.getUser()
-      if (error || !data?.user) {
-        router.push("/login")
-        return
-      }
-      setUser(data.user)
+ useEffect(() => {
+  const verifyUser = async () => {
+    const { data, error } = await supabase.auth.getUser()
+    if (error || !data?.user) {
+      window.location.href = "/login"
     }
-    verifyUser()
-  }, [router])
+  }
+  verifyUser()
+}, [])
 
   // ✅ Fetch signals data
   const fetchSignals = async () => {
