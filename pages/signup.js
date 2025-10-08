@@ -7,28 +7,32 @@ export default function Signup() {
   const router = useRouter()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const [message, setMessage] = useState("")
+  const [error, setError] = useState("")
 
-  async function handleSignup(e) {
+  const handleSignup = async (e) => {
     e.preventDefault()
-    setError("")
     setLoading(true)
+    setError("")
+    setMessage("")
 
     try {
-     const { data, error } = await supabase.auth.signUp({
-  email,
-  password,
-  options: {
-    emailRedirectTo: `${window.location.origin}/dashboard`,
-  },
-})
-
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/login`,
+        },
+      })
 
       if (error) throw error
 
-      alert("✅ Signup successful! Please verify your email before logging in.")
-      router.push("/login")
+      setMessage(
+        "✅ Registration successful! Please check your email to verify your account."
+      )
+      setEmail("")
+      setPassword("")
     } catch (err) {
       console.error("Signup error:", err)
       setError(err.message)
@@ -38,59 +42,63 @@ export default function Signup() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-black text-white">
-      <div className="bg-gray-900 p-8 rounded-2xl shadow-lg w-full max-w-md border border-gray-700">
-        <h1 className="text-3xl font-bold text-center mb-6 text-yellow-400">
-          Create Your Account
+    <div className="min-h-screen bg-black flex items-center justify-center text-white px-4">
+      <div className="bg-zinc-900 p-8 rounded-2xl shadow-2xl max-w-md w-full">
+        <h1 className="text-3xl font-bold text-yellow-400 mb-4 text-center">
+          Create Your Growfinitys Account
         </h1>
-
-        {error && (
-          <div className="bg-red-600 text-white p-3 rounded mb-4 text-sm">
-            {error}
-          </div>
-        )}
+        <p className="text-gray-400 mb-6 text-center">
+          Sign up to access your AI tools and content packs
+        </p>
 
         <form onSubmit={handleSignup} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Email</label>
+            <label className="block text-gray-300 mb-1">Email</label>
             <input
               type="email"
-              required
+              className="w-full px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 focus:outline-none focus:border-yellow-400"
+              placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-3 bg-gray-800 rounded-lg border border-gray-700 focus:outline-none focus:border-yellow-500"
-              placeholder="you@example.com"
+              required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Password</label>
+            <label className="block text-gray-300 mb-1">Password</label>
             <input
               type="password"
-              required
+              className="w-full px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 focus:outline-none focus:border-yellow-400"
+              placeholder="Minimum 6 characters"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-3 bg-gray-800 rounded-lg border border-gray-700 focus:outline-none focus:border-yellow-500"
-              placeholder="••••••••"
+              required
             />
           </div>
+
+          {error && (
+            <p className="text-red-500 text-sm text-center">{error}</p>
+          )}
+          {message && (
+            <p className="text-green-400 text-sm text-center">{message}</p>
+          )}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-yellow-500 text-black font-semibold py-3 rounded-lg hover:bg-yellow-400 transition"
+            className="w-full py-2 bg-yellow-500 hover:bg-yellow-400 text-black font-semibold rounded-lg transition"
           >
             {loading ? "Creating account..." : "Sign Up"}
           </button>
         </form>
 
-        <p className="text-sm text-center text-gray-400 mt-4">
+        <p className="text-gray-400 text-sm text-center mt-4">
           Already have an account?{" "}
           <a
             href="/login"
-            className="text-yellow-400 hover:underline hover:text-yellow-300"
+            className="text-yellow-400 hover:underline font-medium"
           >
-            Log in
+            Login
           </a>
         </p>
       </div>
