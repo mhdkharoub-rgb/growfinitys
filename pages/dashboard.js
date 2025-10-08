@@ -9,6 +9,7 @@ export default function Dashboard() {
   const [lastUpdated, setLastUpdated] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // 🔒 Verify user and load signals
   useEffect(() => {
     const checkUser = async () => {
       const { data } = await supabase.auth.getUser();
@@ -20,6 +21,14 @@ export default function Dashboard() {
       fetchSignals();
     };
     checkUser();
+  }, []);
+
+  // 🔄 Auto-refresh every 60 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchSignals();
+    }, 60000); // 60 000 ms = 60 s
+    return () => clearInterval(interval);
   }, []);
 
   const fetchSignals = async () => {
