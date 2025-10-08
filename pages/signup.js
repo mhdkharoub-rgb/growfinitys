@@ -1,10 +1,8 @@
 // pages/signup.js
 import { useState } from "react"
-import { useRouter } from "next/router"
 import { supabase } from "../lib/supabase"
 
 export default function Signup() {
-  const router = useRouter()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
@@ -13,6 +11,7 @@ export default function Signup() {
 
   const handleSignup = async (e) => {
     e.preventDefault()
+    if (loading) return
     setLoading(true)
     setError("")
     setMessage("")
@@ -29,12 +28,12 @@ export default function Signup() {
       if (error) throw error
 
       setMessage(
-        "✅ Registration successful! Please check your email to verify your account."
+        "✅ Account created! Check your inbox for a single verification email."
       )
       setEmail("")
       setPassword("")
     } catch (err) {
-      console.error("Signup error:", err)
+      console.error(err)
       setError(err.message)
     } finally {
       setLoading(false)
@@ -48,56 +47,47 @@ export default function Signup() {
           Create Your Growfinitys Account
         </h1>
         <p className="text-gray-400 mb-6 text-center">
-          Sign up to access your AI tools and content packs
+          Sign up to access your AI business tools
         </p>
 
         <form onSubmit={handleSignup} className="space-y-4">
-          <div>
-            <label className="block text-gray-300 mb-1">Email</label>
-            <input
-              type="email"
-              className="w-full px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 focus:outline-none focus:border-yellow-400"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
+          <input
+            type="email"
+            placeholder="you@example.com"
+            className="w-full px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 focus:border-yellow-400"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
 
-          <div>
-            <label className="block text-gray-300 mb-1">Password</label>
-            <input
-              type="password"
-              className="w-full px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 focus:outline-none focus:border-yellow-400"
-              placeholder="Minimum 6 characters"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
+          <input
+            type="password"
+            placeholder="Minimum 6 characters"
+            className="w-full px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 focus:border-yellow-400"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
 
-          {error && (
-            <p className="text-red-500 text-sm text-center">{error}</p>
-          )}
-          {message && (
-            <p className="text-green-400 text-sm text-center">{message}</p>
-          )}
+          {error && <p className="text-red-500 text-center">{error}</p>}
+          {message && <p className="text-green-400 text-center">{message}</p>}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2 bg-yellow-500 hover:bg-yellow-400 text-black font-semibold rounded-lg transition"
+            className={`w-full py-2 font-semibold rounded-lg transition ${
+              loading
+                ? "bg-gray-500 cursor-not-allowed"
+                : "bg-yellow-500 hover:bg-yellow-400 text-black"
+            }`}
           >
-            {loading ? "Creating account..." : "Sign Up"}
+            {loading ? "Sending email..." : "Sign Up"}
           </button>
         </form>
 
         <p className="text-gray-400 text-sm text-center mt-4">
           Already have an account?{" "}
-          <a
-            href="/login"
-            className="text-yellow-400 hover:underline font-medium"
-          >
+          <a href="/login" className="text-yellow-400 hover:underline">
             Login
           </a>
         </p>
