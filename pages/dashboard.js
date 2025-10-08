@@ -1,144 +1,111 @@
-// pages/dashboard.js
-import { useEffect, useState } from "react"
-import { useRouter } from "next/router"
-import { supabase } from "../lib/supabase"
+import { useEffect, useState } from "react";
+import { supabase } from "../lib/supabase";
+import { useRouter } from "next/router";
 
 export default function Dashboard() {
-  const router = useRouter()
-  const [user, setUser] = useState(null)
-  const [membership, setMembership] = useState("Basic")
-  const [signals, setSignals] = useState([])
-  const [loading, setLoading] = useState(true)
+  const router = useRouter();
+  const [user, setUser] = useState(null);
+  const [signals, setSignals] = useState([]);
+  const [lastUpdated, setLastUpdated] = useState("");
 
-  // Get logged user + membership
   useEffect(() => {
-    const fetchUser = async () => {
-      const { data, error } = await supabase.auth.getUser()
-      if (error || !data?.user) {
-        router.push("/login")
-        return
+    const checkUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      if (!data?.user) {
+        router.push("/login");
+        return;
       }
-      setUser(data.user)
+      setUser(data.user);
+      fetchSignals();
+    };
 
-      // Fetch membership from 'profiles' table
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("membership_tier")
-        .eq("id", data.user.id)
-        .single()
+    checkUser();
+  }, []);
 
-      setMembership(profile?.membership_tier || "Basic")
+  const fetchSignals = async () => {
+    const { data, error } = await supabase
+      .from("signals")
+      .select("*")
+      .order("date", { ascending: false });
+
+    if (error) console.error(error);
+    else {
+      setSignals(data);
+      const now = new Date();
+      setLastUpdated(now.toLocaleString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      }));
     }
-    fetchUser()
-  }, [router])
-
-  // Fetch signals
-  useEffect(() => {
-    const fetchSignals = async () => {
-      setLoading(true)
-      const { data, error } = await supabase
-        .from("signals")
-        .select("*")
-        .order("date", { ascending: false })
-
-      if (!error && data) {
-        let limited = data
-        if (membership === "Basic") limited = data.slice(0, 2)
-        else if (membership === "Pro") limited = data.slice(0, 8)
-        else limited = data // VIP full feed
-        setSignals(limited)
-      }
-      setLoading(false)
-    }
-    if (membership) fetchSignals()
-  }, [membership])
+  };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut()
-    router.push("/login")
-  }
+    await supabase.auth.signOut();
+    router.push("/login");
+  };
 
-  if (loading) return <p className="text-center mt-20 text-white">Loading dashboard...</p>
+  if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-black text-white p-8">
-      <div className="max-w-5xl mx-auto mt-20 bg-gray-900 p-8 rounded-2xl shadow-lg">
-        <h1 className="text-3xl font-bold mb-2 text-yellow-400">
-          👋 Welcome, {user?.email}
-        </h1>
+    <div className="min-h-screen bg-black text-white p-6">
+      <div className="max-w-5xl mx-auto">
+        <h1 className="text-2xl font-bold mb-2">👋 Welcome, {user.email}</h1>
         <p className="text-gray-400 mb-6">
-          You’re logged in as a{" "}
-          <span className="text-yellow-400 font-semibold">
-            {membership} Member
-          </span>
-          .
+          You’re now logged in to <span className="text-yellow-400">Growfinitys Dashboard</span>.
         </p>
 
-        {/* Signals Section */}
-        <div className="bg-gray-800 p-6 rounded-lg mb-8">
-          <h2 className="text-2xl font-semibold mb-4 text-yellow-400">
-            📊 Daily Market Signals
-          </h2>
-          {signals.length === 0 ? (
-            <p className="text-gray-400">No signals available yet.</p>
-          ) : (
-            <table className="w-full border-collapse text-sm">
-              <thead>
-                <tr className="text-yellow-400 border-b border-gray-700">
-                  <th className="p-2 text-left">Date</th>
-                  <th className="p-2 text-left">Symbol</th>
-                  <th className="p-2 text-left">Signal</th>
-                  <th className="p-2 text-left">Confidence</th>
-                </tr>
-              </thead>
-              <tbody>
-                {signals.map((s, i) => (
-                  <tr key={i} className="border-b border-gray-700 hover:bg-gray-800/60">
-                    <td className="p-2">{new Date(s.date).toLocaleDateString()}</td>
-                    <td className="p-2">{s.symbol}</td>
-                    <td className={`p-2 font-semibold ${s.action === "BUY" ? "text-green-400" : "text-red-400"}`}>
-                      {s.action}
-                    </td>
-                    <td className="p-2">{s.confidence}%</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-          {membership !== "VIP" && (
-            <p className="text-gray-400 mt-3 italic">
-              Upgrade to <span className="text-yellow-400 font-semibold">VIP</span> for unlimited live feed access.
-            </p>
-          )}
+        {/* ✅ Last Updated Time */}
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold text-yellow-400">Daily Trading Signals</h2>
+          <p className="text-gray-400 text-sm">
+            Last Updated: {lastUpdated || "Loading..."}
+          </p>
         </div>
 
-        {/* VIP Features */}
-        {membership === "VIP" && (
-          <div className="bg-yellow-500/10 border border-yellow-400 p-6 rounded-lg mb-8">
-            <h2 className="text-2xl font-semibold mb-3 text-yellow-400">
-              💎 VIP AI Tools
-            </h2>
-            <p className="text-gray-300 mb-4">
-              Access your AI Content Pack Generator and exclusive reports.
-            </p>
-            <button
-              onClick={() => router.push("/generate")}
-              className="bg-yellow-500 text-black font-semibold py-2 px-6 rounded-lg hover:bg-yellow-400 transition"
-            >
-              🚀 Generate AI Pack
-            </button>
-          </div>
-        )}
+        {/* ✅ Signals Table */}
+        <div className="overflow-x-auto border border-gray-700 rounded-lg">
+          <table className="w-full border-collapse text-sm">
+            <thead>
+              <tr className="text-yellow-400 border-b border-gray-700">
+                <th className="p-2 text-left">Date</th>
+                <th className="p-2 text-left">Symbol</th>
+                <th className="p-2 text-left">Signal</th>
+                <th className="p-2 text-left">Entry</th>
+                <th className="p-2 text-left">TP</th>
+                <th className="p-2 text-left">SL</th>
+                <th className="p-2 text-left">Confidence</th>
+              </tr>
+            </thead>
+            <tbody>
+              {signals.map((s, i) => (
+                <tr key={i} className="border-b border-gray-700 hover:bg-gray-800/60">
+                  <td className="p-2">{new Date(s.date).toLocaleDateString()}</td>
+                  <td className="p-2">{s.symbol}</td>
+                  <td className={`p-2 font-semibold ${s.action === "BUY" ? "text-green-400" : "text-red-400"}`}>
+                    {s.action}
+                  </td>
+                  <td className="p-2 text-orange-400">{s.entry_price?.toFixed(2)}</td>
+                  <td className="p-2 text-green-400">{s.take_profit?.toFixed(2)}</td>
+                  <td className="p-2 text-red-400">{s.stop_loss?.toFixed(2)}</td>
+                  <td className="p-2">{s.confidence}%</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
-        <div className="flex justify-end">
+        <div className="mt-6 text-center">
           <button
             onClick={handleLogout}
-            className="bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-6 rounded-lg transition"
+            className="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-lg"
           >
             Logout
           </button>
         </div>
       </div>
     </div>
-  )
+  );
 }
