@@ -1,14 +1,32 @@
 // components/Navbar.js
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/router"
 import { supabase } from "../lib/supabase"
 
 export default function Navbar() {
   const router = useRouter()
+  const [user, setUser] = useState(null)
 
-  async function handleLogout() {
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data } = await supabase.auth.getUser()
+      setUser(data?.user)
+    }
+
+    checkUser()
+
+    // Listen for login/logout events
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null)
+    })
+
+    return () => listener.subscription.unsubscribe()
+  }, [])
+
+  const handleLogout = async () => {
     await supabase.auth.signOut()
-    router.push("/login")
+    router.push("/")
   }
 
   return (
@@ -26,31 +44,39 @@ export default function Navbar() {
           <a href="#how" className="hover:text-yellow-400 transition">How It Works</a>
         </div>
 
-        {/* Buttons Section */}
+        {/* Auth Buttons */}
         <div className="flex items-center space-x-4">
-          {/* Dashboard Button */}
-          <Link
-            href="/dashboard"
-            className="border border-yellow-500 text-yellow-500 font-semibold py-2 px-5 rounded-lg hover:bg-yellow-500 hover:text-black transition"
-          >
-            Dashboard
-          </Link>
-
-          {/* Sign Up Button (your own route) */}
-          <Link
-            href="/signup"
-            className="bg-yellow-500 text-black font-semibold py-2 px-5 rounded-lg hover:bg-yellow-400 transition"
-          >
-            Sign Up
-          </Link>
-
-          {/* Logout Button */}
-          <button
-            onClick={handleLogout}
-            className="border border-gray-400 text-gray-300 py-2 px-4 rounded-lg hover:bg-gray-700 transition"
-          >
-            Logout
-          </button>
+          {user ? (
+            <>
+              <Link
+                href="/dashboard"
+                className="border border-yellow-500 text-yellow-500 font-semibold py-2 px-5 rounded-lg hover:bg-yellow-500 hover:text-black transition"
+              >
+                Dashboard
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="bg-yellow-500 text-black font-semibold py-2 px-5 rounded-lg hover:bg-yellow-400 transition"
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="border border-yellow-500 text-yellow-500 font-semibold py-2 px-5 rounded-lg hover:bg-yellow-500 hover:text-black transition"
+              >
+                Login
+              </Link>
+              <Link
+                href="/signup"
+                className="bg-yellow-500 text-black font-semibold py-2 px-5 rounded-lg hover:bg-yellow-400 transition"
+              >
+                Sign Up
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </nav>
