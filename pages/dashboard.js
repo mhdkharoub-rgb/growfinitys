@@ -1,3 +1,4 @@
+// pages/dashboard.js
 import { useEffect, useState } from "react"
 import { useRouter } from "next/router"
 import { supabase } from "../lib/supabase"
@@ -8,66 +9,55 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const checkSession = async () => {
-      const { data: { user }, error } = await supabase.auth.getUser()
-      if (error || !user) {
-        router.replace("/login")
+    const getUser = async () => {
+      const { data, error } = await supabase.auth.getUser()
+      if (error || !data?.user) {
+        router.push("/login")
       } else {
-        setUser(user)
+        setUser(data.user)
       }
       setLoading(false)
     }
-
-    checkSession()
-
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === "SIGNED_OUT") router.replace("/login")
-        if (event === "SIGNED_IN" && session?.user) setUser(session.user)
-      }
-    )
-
-    return () => {
-      listener.subscription.unsubscribe()
-    }
+    getUser()
   }, [router])
 
-  if (loading)
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-black text-white">
-        <p>Loading dashboard...</p>
-      </div>
-    )
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    router.push("/login")
+  }
 
-  if (!user) return null
+  if (loading) return <p className="text-center mt-20">Loading dashboard...</p>
 
   return (
-    <div className="min-h-screen bg-black text-white p-6">
-      <h1 className="text-3xl font-bold text-yellow-400 mb-4">
-        👋 Welcome, {user.email}
-      </h1>
+    <div className="min-h-screen bg-black text-white p-8">
+      <div className="max-w-3xl mx-auto mt-20 bg-gray-900 p-8 rounded-2xl shadow-lg">
+        <h1 className="text-3xl font-bold mb-4 text-yellow-400">👋 Welcome, {user?.email}</h1>
+        <p className="text-gray-300 mb-6">
+          You’re now logged in to <span className="text-yellow-400 font-semibold">Growfinitys Dashboard</span>.
+        </p>
 
-      <p className="text-gray-300 mb-6">
-        You’re now logged in to Growfinitys Dashboard.
-      </p>
+        <div className="bg-gray-800 p-4 rounded-lg mb-6">
+          <h2 className="text-lg font-semibold text-yellow-400 mb-2">Account Information</h2>
+          <p><strong>Email:</strong> {user?.email}</p>
+          <p><strong>User ID:</strong> {user?.id}</p>
+        </div>
 
-      <div className="bg-zinc-900 p-6 rounded-lg shadow-md">
-        <h2 className="text-xl font-semibold text-yellow-400 mb-2">
-          Account Information
-        </h2>
-        <p>Email: {user.email}</p>
-        <p>User ID: {user.id}</p>
+        <div className="flex gap-4">
+          <button
+            onClick={() => router.push("/generate")}
+            className="bg-yellow-500 text-black font-semibold py-2 px-6 rounded-lg hover:bg-yellow-400 transition"
+          >
+            ✨ Generate AI Pack
+          </button>
+
+          <button
+            onClick={handleLogout}
+            className="bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-6 rounded-lg transition"
+          >
+            Logout
+          </button>
+        </div>
       </div>
-
-      <button
-        onClick={async () => {
-          await supabase.auth.signOut()
-          window.location.href = "/login"
-        }}
-        className="mt-8 bg-yellow-500 hover:bg-yellow-400 text-black font-semibold py-2 px-5 rounded-lg"
-      >
-        Logout
-      </button>
     </div>
   )
 }
