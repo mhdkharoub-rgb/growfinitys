@@ -20,7 +20,7 @@ export default function AdminPage() {
         return;
       }
       setUser(data.user);
-      const adminEmails = ["mhdkharoub123@gmail.com"];
+      const adminEmails = ["mhdkharoub@gmail.com"];
       if (!adminEmails.includes(data.user.email)) {
         alert("Access Denied. Admins only.");
         router.push("/dashboard");
