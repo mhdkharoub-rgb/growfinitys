@@ -157,6 +157,36 @@ export default function Dashboard() {
             </tbody>
           </table>
         </div>
+{user?.email === "mhdkharoub@gmail.com" && (
+  <div className="mt-10 border-t border-gray-700 pt-5">
+    <h2 className="text-lg text-yellow-400 font-semibold mb-3">
+      🧠 Admin Shortcut — Change Your Own Tier
+    </h2>
+    <div className="flex gap-3">
+      {["Basic", "Pro", "VIP"].map((level) => (
+        <button
+          key={level}
+          onClick={async () => {
+            await supabase
+              .from("profiles")
+              .update({ membership_tier: level })
+              .eq("id", user.id);
+            alert(`✅ You switched your account to ${level} tier!`);
+          }}
+          className={`px-4 py-2 rounded-lg font-semibold transition ${
+            level === "Basic"
+              ? "bg-gray-700 hover:bg-gray-600"
+              : level === "Pro"
+              ? "bg-purple-600 hover:bg-purple-500"
+              : "bg-yellow-400 hover:bg-yellow-300 text-black"
+          }`}
+        >
+          {level}
+        </button>
+      ))}
+    </div>
+  </div>
+)}
 
         {/* 🚪 Logout */}
         <div className="mt-6 text-center">
