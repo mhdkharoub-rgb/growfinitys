@@ -74,6 +74,28 @@ export default function AdminPage() {
     else setFilteredProfiles(profiles.filter((p) => p.membership_tier === value));
   };
 
+  const exportToCSV = () => {
+    const headers = ["Full Name", "Email", "Membership Tier", "Joined"];
+    const rows = filteredProfiles.map((p) => [
+      p.full_name || "",
+      p.email,
+      p.membership_tier,
+      new Date(p.created_at).toLocaleDateString(),
+    ]);
+
+    const csvContent =
+      "data:text/csv;charset=utf-8," +
+      [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `growfinitys_users_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   if (!isAdmin) return null;
 
   return (
@@ -86,7 +108,7 @@ export default function AdminPage() {
           Logged in as <span className="text-yellow-400">{user?.email}</span>
         </p>
 
-        {/* Search + Filter */}
+        {/* Search + Filter + Export */}
         <div className="flex flex-col md:flex-row justify-between mb-6 gap-4">
           <input
             type="text"
@@ -96,16 +118,25 @@ export default function AdminPage() {
             className="w-full md:w-1/2 p-2 rounded bg-gray-800 text-white border border-gray-700 focus:border-yellow-400 outline-none"
           />
 
-          <select
-            value={tierFilter}
-            onChange={(e) => handleTierFilter(e.target.value)}
-            className="p-2 rounded bg-gray-800 text-white border border-gray-700 focus:border-yellow-400 outline-none"
-          >
-            <option value="All">All Tiers</option>
-            <option value="Basic">Basic</option>
-            <option value="Pro">Pro</option>
-            <option value="VIP">VIP</option>
-          </select>
+          <div className="flex gap-3">
+            <select
+              value={tierFilter}
+              onChange={(e) => handleTierFilter(e.target.value)}
+              className="p-2 rounded bg-gray-800 text-white border border-gray-700 focus:border-yellow-400 outline-none"
+            >
+              <option value="All">All Tiers</option>
+              <option value="Basic">Basic</option>
+              <option value="Pro">Pro</option>
+              <option value="VIP">VIP</option>
+            </select>
+
+            <button
+              onClick={exportToCSV}
+              className="bg-yellow-500 text-black font-semibold px-4 py-2 rounded-lg hover:bg-yellow-400 transition"
+            >
+              ⬇️ Export CSV
+            </button>
+          </div>
         </div>
 
         {loading ? (
