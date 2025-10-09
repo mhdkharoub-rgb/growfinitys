@@ -6,10 +6,12 @@ export default function AdminPage() {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [profiles, setProfiles] = useState([]);
+  const [filteredProfiles, setFilteredProfiles] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [tierFilter, setTierFilter] = useState("All");
   const [loading, setLoading] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Load user and verify if admin
   useEffect(() => {
     const checkAdmin = async () => {
       const { data } = await supabase.auth.getUser();
@@ -18,8 +20,6 @@ export default function AdminPage() {
         return;
       }
       setUser(data.user);
-
-      // 🧠 Define admin emails manually for now
       const adminEmails = ["mhdkharoub123@gmail.com"];
       if (!adminEmails.includes(data.user.email)) {
         alert("Access Denied. Admins only.");
@@ -32,19 +32,20 @@ export default function AdminPage() {
     checkAdmin();
   }, []);
 
-  // Fetch all profiles
   const fetchProfiles = async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, email, membership_tier, created_at")
+      .select("id, email, full_name, membership_tier, created_at")
       .order("created_at", { ascending: false });
     if (error) console.error(error);
-    else setProfiles(data);
+    else {
+      setProfiles(data);
+      setFilteredProfiles(data);
+    }
     setLoading(false);
   };
 
-  // Update user tier
   const updateTier = async (id, newTier) => {
     const { error } = await supabase
       .from("profiles")
@@ -55,6 +56,22 @@ export default function AdminPage() {
       alert(`✅ Updated to ${newTier}`);
       fetchProfiles();
     }
+  };
+
+  const handleSearch = (value) => {
+    setSearchTerm(value);
+    const filtered = profiles.filter(
+      (p) =>
+        p.email.toLowerCase().includes(value.toLowerCase()) ||
+        (p.full_name && p.full_name.toLowerCase().includes(value.toLowerCase()))
+    );
+    setFilteredProfiles(filtered);
+  };
+
+  const handleTierFilter = (value) => {
+    setTierFilter(value);
+    if (value === "All") setFilteredProfiles(profiles);
+    else setFilteredProfiles(profiles.filter((p) => p.membership_tier === value));
   };
 
   if (!isAdmin) return null;
@@ -69,6 +86,28 @@ export default function AdminPage() {
           Logged in as <span className="text-yellow-400">{user?.email}</span>
         </p>
 
+        {/* Search + Filter */}
+        <div className="flex flex-col md:flex-row justify-between mb-6 gap-4">
+          <input
+            type="text"
+            placeholder="Search by name or email..."
+            value={searchTerm}
+            onChange={(e) => handleSearch(e.target.value)}
+            className="w-full md:w-1/2 p-2 rounded bg-gray-800 text-white border border-gray-700 focus:border-yellow-400 outline-none"
+          />
+
+          <select
+            value={tierFilter}
+            onChange={(e) => handleTierFilter(e.target.value)}
+            className="p-2 rounded bg-gray-800 text-white border border-gray-700 focus:border-yellow-400 outline-none"
+          >
+            <option value="All">All Tiers</option>
+            <option value="Basic">Basic</option>
+            <option value="Pro">Pro</option>
+            <option value="VIP">VIP</option>
+          </select>
+        </div>
+
         {loading ? (
           <p>Loading user profiles...</p>
         ) : (
@@ -76,6 +115,7 @@ export default function AdminPage() {
             <table className="w-full border-collapse text-sm">
               <thead>
                 <tr className="text-yellow-400 border-b border-gray-700">
+                  <th className="p-3 text-left">Full Name</th>
                   <th className="p-3 text-left">Email</th>
                   <th className="p-3 text-left">Tier</th>
                   <th className="p-3 text-left">Joined</th>
@@ -83,11 +123,12 @@ export default function AdminPage() {
                 </tr>
               </thead>
               <tbody>
-                {profiles.map((p) => (
+                {filteredProfiles.map((p) => (
                   <tr
                     key={p.id}
                     className="border-b border-gray-700 hover:bg-gray-800/50"
                   >
+                    <td className="p-3">{p.full_name || "—"}</td>
                     <td className="p-3">{p.email}</td>
                     <td className="p-3">{p.membership_tier}</td>
                     <td className="p-3">
