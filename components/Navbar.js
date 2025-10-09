@@ -11,7 +11,7 @@ export default function Navbar() {
       const { data } = await supabase.auth.getUser();
       if (data?.user) {
         setUser(data.user);
-        const adminEmails = ["mhdkharoub123@gmail.com"]; // add more if needed
+        const adminEmails = ["mhdkharoub@gmail.com"]; // add more if needed
         if (adminEmails.includes(data.user.email)) setIsAdmin(true);
       }
     };
