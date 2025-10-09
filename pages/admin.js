@@ -11,6 +11,7 @@ export default function AdminPage() {
   const [tierFilter, setTierFilter] = useState("All");
   const [loading, setLoading] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [sortConfig, setSortConfig] = useState({ key: "created_at", direction: "desc" });
 
   useEffect(() => {
     const checkAdmin = async () => {
@@ -96,6 +97,21 @@ export default function AdminPage() {
     document.body.removeChild(link);
   };
 
+  const handleSort = (key) => {
+    let direction = "asc";
+    if (sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
+    }
+    setSortConfig({ key, direction });
+
+    const sorted = [...filteredProfiles].sort((a, b) => {
+      if (a[key] < b[key]) return direction === "asc" ? -1 : 1;
+      if (a[key] > b[key]) return direction === "asc" ? 1 : -1;
+      return 0;
+    });
+    setFilteredProfiles(sorted);
+  };
+
   if (!isAdmin) return null;
 
   return (
@@ -146,10 +162,22 @@ export default function AdminPage() {
             <table className="w-full border-collapse text-sm">
               <thead>
                 <tr className="text-yellow-400 border-b border-gray-700">
-                  <th className="p-3 text-left">Full Name</th>
-                  <th className="p-3 text-left">Email</th>
-                  <th className="p-3 text-left">Tier</th>
-                  <th className="p-3 text-left">Joined</th>
+                  {[
+                    { key: "full_name", label: "Full Name" },
+                    { key: "email", label: "Email" },
+                    { key: "membership_tier", label: "Tier" },
+                    { key: "created_at", label: "Joined" },
+                  ].map(({ key, label }) => (
+                    <th
+                      key={key}
+                      className="p-3 text-left cursor-pointer select-none hover:text-yellow-300"
+                      onClick={() => handleSort(key)}
+                    >
+                      {label}
+                      {sortConfig.key === key &&
+                        (sortConfig.direction === "asc" ? " ▲" : " ▼")}
+                    </th>
+                  ))}
                   <th className="p-3 text-left">Actions</th>
                 </tr>
               </thead>
