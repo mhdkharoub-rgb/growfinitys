@@ -1,20 +1,17 @@
 // pages/_app.js
-import Head from "next/head";
-import "../styles/globals.css";
+import "../styles/globals.css"
+import { createBrowserClient } from "@supabase/ssr"
+import { SessionContextProvider } from "@supabase/auth-helpers-react"
+
+const supabase = createBrowserClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+)
 
 export default function MyApp({ Component, pageProps }) {
   return (
-    <>
-      <Head>
-        <title>Growfinitys</title>
-        <meta
-          name="description"
-          content="Growfinitys – AI-powered market insights, signals, and analysis for traders."
-        />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-
+    <SessionContextProvider supabaseClient={supabase}>
       <Component {...pageProps} />
-    </>
-  );
+    </SessionContextProvider>
+  )
 }
