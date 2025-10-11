@@ -1,36 +1,22 @@
 // middleware.js
-import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs"
+import { NextResponse } from "next/server"
 
 export async function middleware(req) {
-  const url = req.nextUrl.clone();
+  const res = NextResponse.next()
+  const supabase = createMiddlewareClient({ req, res })
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
 
-  // Only guard these paths
-  const protectedPaths = ["/dashboard", "/admin"];
-  if (!protectedPaths.some((p) => url.pathname.startsWith(p))) {
-    return NextResponse.next();
+  const protectedPaths = ["/dashboard", "/admin"]
+  const isProtected = protectedPaths.some((path) => req.nextUrl.pathname.startsWith(path))
+
+  if (isProtected && !session) {
+    const redirectUrl = req.nextUrl.clone()
+    redirectUrl.pathname = "/login"
+    return NextResponse.redirect(redirectUrl)
   }
 
-  // Read Supabase auth cookie (if present) on the edge
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    {
-      global: { headers: { Authorization: req.headers.get("Authorization") || "" } },
-    }
-  );
-
-  // Try to get user from server (note: if cookie is missing, user will be null)
-  const { data: { user } = {} } = await supabase.auth.getUser();
-
-  if (!user) {
-    url.pathname = "/login";
-    return NextResponse.redirect(url);
-  }
-
-  return NextResponse.next();
+  return res
 }
-
-export const config = {
-  matcher: ["/dashboard/:path*", "/admin/:path*"],
-};
