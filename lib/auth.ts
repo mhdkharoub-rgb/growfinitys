@@ -1,4 +1,3 @@
-import { cookies } from "next/headers";
 import { createServerClient } from "./supabaseServer";
 
 export const getUser = async () => {
@@ -10,7 +9,7 @@ export const getUser = async () => {
 export const requireAdmin = async () => {
   const user = await getUser();
   if (!user || user.email !== process.env.ADMIN_EMAIL) {
-    throw new Error("Unauthorized access");
+    throw new Error("Unauthorized");
   }
   return user;
 };
