@@ -7,43 +7,44 @@ export default function AdminPanel() {
   const [signals, setSignals] = useState([]);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const loadData = async () => {
       const { data: users } = await supabase.from("profiles").select("*");
       const { data: signals } = await supabase.from("signals").select("*");
       setUsers(users || []);
       setSignals(signals || []);
     };
-    fetchData();
+    loadData();
   }, []);
 
   return (
-    <div className="p-8">
+    <div className="p-8 bg-black text-white min-h-screen">
       <h1 className="text-3xl font-bold mb-4 text-yellow-400">Admin Dashboard</h1>
-      <section>
-        <h2 className="text-xl mb-2">Users</h2>
-        <table className="w-full text-left text-sm bg-zinc-900 rounded-xl">
+
+      <section className="mb-6">
+        <h2 className="text-xl mb-2">👥 Users</h2>
+        <table className="w-full text-left border border-gray-700 rounded-xl">
           <thead>
-            <tr className="border-b border-zinc-700">
-              <th className="p-2">Email</th>
-              <th className="p-2">Role</th>
-              <th className="p-2">Subscription</th>
+            <tr>
+              <th className="p-2 border-b border-gray-700">Email</th>
+              <th className="p-2 border-b border-gray-700">Role</th>
+              <th className="p-2 border-b border-gray-700">Plan</th>
             </tr>
           </thead>
           <tbody>
             {users.map((u: any) => (
-              <tr key={u.id} className="border-b border-zinc-800">
+              <tr key={u.id} className="border-b border-gray-800">
                 <td className="p-2">{u.email}</td>
-                <td className="p-2">{u.role}</td>
-                <td className="p-2">{u.subscription_tier}</td>
+                <td className="p-2">{u.role || "user"}</td>
+                <td className="p-2">{u.subscription_tier || "none"}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </section>
 
-      <section className="mt-6">
-        <h2 className="text-xl mb-2">Signals</h2>
-        <pre className="bg-black text-gray-300 p-4 rounded-lg overflow-auto max-h-64">
+      <section>
+        <h2 className="text-xl mb-2">📊 Signals</h2>
+        <pre className="bg-zinc-900 p-4 rounded-lg overflow-x-auto">
           {JSON.stringify(signals, null, 2)}
         </pre>
       </section>
