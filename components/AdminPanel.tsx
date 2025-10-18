@@ -1,81 +1,52 @@
 "use client";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function AdminPanel() {
-  const [users, setUsers] = useState<any[]>([]);
-  const [signals, setSignals] = useState<any[]>([]);
-  const [email, setEmail] = useState("");
-  const [plan, setPlan] = useState("basic");
+  const [users, setUsers] = useState([]);
+  const [signals, setSignals] = useState([]);
 
-  async function refresh() {
-    const u = await fetch("/api/signals/list").then(r => r.json()); // returns {signals, users}
-    setUsers(u.users ?? []);
-    setSignals(u.signals ?? []);
-  }
-
-  async function addUser() {
-    await fetch("/api/subscription/claim", { method: "POST", body: JSON.stringify({ email, plan }), headers: { "Content-Type": "application/json" }});
-    setEmail(""); setPlan("basic");
-    await refresh();
-  }
-
-  async function gen(period: "hourly"|"daily"|"monthly") {
-    await fetch(`/api/signals/generate?secret=${encodeURIComponent(process.env.NEXT_PUBLIC_APP_URL || "")}&period=${period}`, { method: "POST" })
-      .catch(() => {}); // In production, call with CRON_SECRET from server (admin page can also POST to a proxy route)
-    await refresh();
-  }
-
-  useEffect(() => { refresh(); }, []);
+  useEffect(() => {
+    const fetchData = async () => {
+      const { data: users } = await supabase.from("profiles").select("*");
+      const { data: signals } = await supabase.from("signals").select("*");
+      setUsers(users || []);
+      setSignals(signals || []);
+    };
+    fetchData();
+  }, []);
 
   return (
-    <div className="space-y-6">
-      <div className="border p-4 rounded">
-        <h3 className="font-semibold mb-2">Manual actions</h3>
-        <div className="flex gap-2">
-          <button className="border px-3 py-1 rounded" onClick={() => gen("hourly")}>Generate Hourly</button>
-          <button className="border px-3 py-1 rounded" onClick={() => gen("daily")}>Generate Daily</button>
-          <button className="border px-3 py-1 rounded" onClick={() => gen("monthly")}>Generate Monthly</button>
-        </div>
-      </div>
+    <div className="p-8">
+      <h1 className="text-3xl font-bold mb-4 text-yellow-400">Admin Dashboard</h1>
+      <section>
+        <h2 className="text-xl mb-2">Users</h2>
+        <table className="w-full text-left text-sm bg-zinc-900 rounded-xl">
+          <thead>
+            <tr className="border-b border-zinc-700">
+              <th className="p-2">Email</th>
+              <th className="p-2">Role</th>
+              <th className="p-2">Subscription</th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.map((u: any) => (
+              <tr key={u.id} className="border-b border-zinc-800">
+                <td className="p-2">{u.email}</td>
+                <td className="p-2">{u.role}</td>
+                <td className="p-2">{u.subscription_tier}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
 
-      <div className="border p-4 rounded">
-        <h3 className="font-semibold mb-2">Add user manually</h3>
-        <div className="flex gap-2">
-          <input className="border px-2 py-1 rounded w-72" placeholder="user@email.com" value={email} onChange={e => setEmail(e.target.value)} />
-          <select className="border px-2 py-1 rounded" value={plan} onChange={e => setPlan(e.target.value)}>
-            <option value="basic">basic</option>
-            <option value="basic-yearly">basic-yearly</option>
-            <option value="pro">pro</option>
-            <option value="pro-yearly">pro-yearly</option>
-            <option value="vip">vip</option>
-            <option value="vip-yearly">vip-yearly</option>
-          </select>
-          <button className="border px-3 py-1 rounded" onClick={addUser}>Add</button>
-        </div>
-      </div>
-
-      <div className="border p-4 rounded">
-        <h3 className="font-semibold mb-2">Users</h3>
-        <div className="text-sm">
-          {users.map(u => (
-            <div key={u.email} className="border-b py-2 flex justify-between">
-              <div>{u.email} • role: {u.role} • plan: {u.plan ?? "—"} • status: {u.status ?? "—"}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="border p-4 rounded">
-        <h3 className="font-semibold mb-2">Signals (latest)</h3>
-        <div className="text-sm space-y-2">
-          {signals.map((s, i) => (
-            <div key={i} className="border rounded p-2">
-              <div className="text-xs text-gray-500">{new Date(s.created_at).toLocaleString()} • {s.period}</div>
-              <div>{s.summary}</div>
-            </div>
-          ))}
-        </div>
-      </div>
+      <section className="mt-6">
+        <h2 className="text-xl mb-2">Signals</h2>
+        <pre className="bg-black text-gray-300 p-4 rounded-lg overflow-auto max-h-64">
+          {JSON.stringify(signals, null, 2)}
+        </pre>
+      </section>
     </div>
   );
 }
