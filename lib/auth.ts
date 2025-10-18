@@ -1,11 +1,16 @@
-export function isAdmin(email?: string | null) {
-  return !!email && email.toLowerCase() === process.env.ADMIN_EMAIL?.toLowerCase();
-}
+import { cookies } from "next/headers";
+import { createServerClient } from "./supabaseServer";
 
-export function requireCronSecret(req: Request) {
-  const header = req.headers.get("x-cron-secret") || new URL(req.url).searchParams.get("secret");
-  if (!header || header !== process.env.CRON_SECRET) {
-    return new Response("Unauthorized", { status: 401 });
+export const getUser = async () => {
+  const supabase = createServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  return user;
+};
+
+export const requireAdmin = async () => {
+  const user = await getUser();
+  if (!user || user.email !== process.env.ADMIN_EMAIL) {
+    throw new Error("Unauthorized access");
   }
-  return null;
-}
+  return user;
+};
