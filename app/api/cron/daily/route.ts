@@ -22,7 +22,7 @@ const { data: subs } = await supabase
 
 const recipients = (subs ?? [])
 .filter(s => new Date(s.expires_at) > new Date())
-.map(s => s.profiles?.email)
+.map((s: any) => s.profiles?.email ?? s.email)
 .filter(Boolean) as string[];
 
 
