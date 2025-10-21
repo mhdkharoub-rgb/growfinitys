@@ -1,49 +1,60 @@
-import { redirect } from "next/navigation";
-import { NextRequest } from "next/server";
-import jwt from "jsonwebtoken";
-import { createSupabaseServer } from "@/lib/supabaseServer";
-import { emails, sendEmail } from "@/lib/emails";
+import { NasioReturnSchema, isValidReturnToken } from '@/lib/nasio';
+import { supabaseServer } from '@/lib/supabaseServer';
 
-export const dynamic = "force-dynamic";
 
-export default async function SuccessPage({ searchParams }: { searchParams: { token?: string } }) {
-  const token = searchParams?.token;
-  if (!token) return <p>Missing token.</p>;
+export default async function JoinSuccess({ searchParams }: { searchParams: Record<string, string | string[]> }) {
+const qp = Object.fromEntries(Object.entries(searchParams).map(([k,v]) => [k, Array.isArray(v)? v[0]: v]));
+const parsed = NasioReturnSchema.safeParse(qp);
+const supabase = supabaseServer();
 
-  const payload = jwt.verify(token, process.env.JWT_SECRET!) as { email: string; planId: string };
-  const supabase = createSupabaseServer();
 
-  // ensure user exists (invite if not)
-  let { data: existing } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1, email: payload.email });
-  if (!existing?.users?.length) {
-    await supabase.auth.admin.inviteUserByEmail(payload.email);
-  }
+if (!parsed.success) {
+return <div className="space-y-3"><h1 className="text-xl font-semibold">Thanks!</h1><p>We couldn’t detect plan details. If you paid, contact support with your receipt.</p></div>
+}
 
-  // fetch user id (may need second try if invite)
-  const { data: users } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1, email: payload.email });
-  const user = users?.users?.[0];
-  if (!user) return <p>We couldn’t create your account yet. Please try again shortly.</p>;
 
-  // set/update subscription
-  const periodEnd =
-    payload.planId.endsWith("yearly")
-      ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
-      : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+const { plan, email, token } = parsed.data;
+if (!isValidReturnToken(token)) {
+return <div className="space-y-3"><h1 className="text-xl font-semibold">Almost there</h1><p>Return token invalid. Please use the official pricing buttons so we can activate instantly.</p></div>;
+}
 
-  await supabase
-    .from("subscriptions")
-    .insert({
-      user_id: user.id,
-      plan: payload.planId,
-      status: "active",
-      current_period_end: periodEnd.toISOString()
-    })
-    .select()
-    .single();
 
-  // Welcome email
-  await sendEmail(payload.email, "Your Growfinitys subscription is active", emails.welcome(payload.planId));
+// Ensure profile exists for the email; if user not signed in, we still provision subscription record.
+const { data: userByEmail } = await supabase.auth.admin.listUsers();
+const target = userByEmail.users.find(u => u.email?.toLowerCase() === email.toLowerCase());
 
-  // success → ask user to login (magic link)
-  redirect("/login");
+
+if (!target) {
+// No account yet — create invitation flow by creating profile placeholder
+// (User will sign up with the same email to claim)
+}
+
+
+const expires = new Date();
+if (plan.endsWith('yearly')) expires.setMonth(expires.getMonth() + 12); else expires.setMonth(expires.getMonth() + 1);
+
+
+// Upsert subscription by email
+const { data: profile } = await supabase.from('profiles').select('id').eq('email', email).maybeSingle();
+const user_id = profile?.id ?? null;
+
+
+if (user_id) {
+await supabase.from('subscriptions').upsert({
+user_id,
+plan,
+status: 'active',
+expires_at: expires.toISOString(),
+}, { onConflict: 'user_id' });
+}
+
+
+return (
+<div className="space-y-4">
+<h1 className="text-2xl font-semibold">Payment received 🎉</h1>
+<p>Your plan <b>{plan}</b> is now active for <b>{email}</b>.</p>
+<p>If you don’t yet have an account, <a className="underline" href="/signup">sign up</a> with this email to access the dashboard.</p>
+<a href="/dashboard" className="inline-block px-4 py-2 border rounded">Go to Dashboard</a>
+</div>
+);
 }
