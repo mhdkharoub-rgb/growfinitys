@@ -1,19 +1,20 @@
-import jwt from "jsonwebtoken";
+import { z } from 'zod';
+import crypto from 'crypto';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL!;
-const JWT_SECRET = process.env.JWT_SECRET!;
 
-// Your six Zero Links
-export const PLANS = [
-  { id: "basic", url: "https://nas.io/growfinitys/zerolink/basic" },
-  { id: "basic-yearly", url: "https://nas.io/growfinitys/zerolink/basic-yearly" },
-  { id: "pro", url: "https://nas.io/growfinitys/zerolink/pro" },
-  { id: "pro-yearly", url: "https://nas.io/growfinitys/zerolink/pro-yearly" },
-  { id: "vip", url: "https://nas.io/growfinitys/zerolink/vip" },
-  { id: "vip-yearly", url: "https://nas.io/growfinitys/zerolink/vip-yearly" }
-];
+// If you can append a shared token to your Nas.io redirect links like
+// https://growfinitys.vercel.app/join/success?plan=pro&email=...&token=XXXX
+// then we verify token === NASIO_RETURN_SECRET
 
-export function makeReturnUrl(planId: string, email: string) {
-  const token = jwt.sign({ email, planId }, JWT_SECRET, { expiresIn: "30m" });
-  return `${SITE_URL}/join/success?token=${encodeURIComponent(token)}`;
+
+export const NasioReturnSchema = z.object({
+plan: z.enum(['basic','basic-yearly','pro','pro-yearly','vip','vip-yearly']),
+email: z.string().email(),
+token: z.string().optional()
+});
+
+
+export function isValidReturnToken(token?: string | null) {
+if (!process.env.NASIO_RETURN_SECRET) return true; // fallback: allow if no secret set
+return token === process.env.NASIO_RETURN_SECRET;
 }
