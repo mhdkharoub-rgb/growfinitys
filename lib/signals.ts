@@ -1,21 +1,24 @@
-import { createSupabaseServer } from "./supabaseServer";
+import { DateTime } from 'luxon';
 
-export async function generateSignals(timeframe: "hourly" | "daily" | "monthly") {
-  // Placeholder AI logic — replace with your model/provider later
-  const payload = {
-    ts: new Date().toISOString(),
-    timeframe,
-    items: [
-      { pair: "BTC/USD", direction: "long", price: 65200, confidence: 0.74 },
-      { pair: "ETH/USD", direction: "short", price: 3120, confidence: 0.68 }
-    ]
-  };
 
-  const supabase = createSupabaseServer();
-  const { error } = await supabase
-    .from("signals")
-    .insert({ timeframe, data: payload });
-  if (error) throw error;
+export type Signal = {
+kind: 'hourly' | 'daily' | 'monthly';
+payload: any;
+};
 
-  return payload;
+
+export function generateSignal(kind: Signal['kind']) {
+// TODO: plug in your AI generation logic here
+const now = DateTime.utc().toISO();
+return {
+kind,
+payload: {
+generated_at: now,
+summary: `${kind} signal at ${now}`,
+markets: [
+{ symbol: 'BTC/USD', action: 'LONG', confidence: 0.62 },
+{ symbol: 'ETH/USD', action: 'HOLD', confidence: 0.51 }
+]
+}
+} as Signal;
 }
