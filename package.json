@@ -1,23 +1,25 @@
 {
-"name": "growfinitys",
-"version": "1.0.0",
-"private": true,
-"scripts": {
-"dev": "next dev",
-"build": "next build",
-"start": "next start"
-},
-"dependencies": {
-"@supabase/ssr": "^0.5.1",
-"@supabase/supabase-js": "^2.45.3",
-"next": "14.2.4",
-"react": "18.3.1",
-"react-dom": "18.3.1",
-"resend": "^3.5.0",
-"zod": "^3.23.8",
-"luxon": "^3.4.4"
-},
-"devDependencies": {
-"typescript": "5.4.5"
-}
+  "name": "growfinitys",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.5.1",
+    "@supabase/supabase-js": "^2.45.3",
+    "luxon": "^3.4.4",
+    "next": "14.2.4",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "resend": "^3.5.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "typescript": "5.4.5",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0"
+  }
 }
