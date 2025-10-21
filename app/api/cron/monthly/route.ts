@@ -21,9 +21,9 @@ const { data: subs } = await supabase
 
 
 const recipients = (subs ?? [])
-.filter(s => new Date(s.expires_at) > new Date())
-.map(s => s.profiles?.email)
-.filter(Boolean) as string[];
+  .filter(s => new Date(s.expires_at) > new Date())
+  .map((s: any) => s.profiles?.email ?? s.email)
+  .filter(Boolean) as string[];
 
 
 const html = `<h2>MONTHLY SIGNAL</h2><pre>${JSON.stringify(sig.payload, null, 2)}</pre>`;
