@@ -1,24 +1,30 @@
-import { cookies, headers } from "next/headers";
-import { createServerClient } from "@supabase/ssr";
+import { createServerClient } from '@supabase/ssr';
+import { cookies, headers } from 'next/headers';
 
-export const createSupabaseServer = () => {
-  const cookieStore = cookies();
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
-        },
-        set(name: string, value: string, options: any) {
-          cookieStore.set({ name, value, ...options });
-        },
-        remove(name: string, options: any) {
-          cookieStore.set({ name, value: "", ...options });
-        }
-      },
-      headers: { "x-forwarded-host": headers().get("host") ?? "" }
-    }
-  );
-};
+
+export function supabaseServer() {
+const cookieStore = cookies();
+const h = headers();
+return createServerClient(
+process.env.NEXT_PUBLIC_SUPABASE_URL!,
+process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+{
+cookies: {
+get(name: string) {
+return cookieStore.get(name)?.value;
+},
+set(name: string, value: string, options: any) {
+cookieStore.set({ name, value, ...options });
+},
+remove(name: string, options: any) {
+cookieStore.set({ name, value: '', ...options });
+},
+},
+headers: {
+get(key: string) {
+return h.get(key) ?? undefined;
+},
+},
+}
+);
+}
