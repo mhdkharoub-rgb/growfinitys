@@ -1,50 +1,33 @@
-import { NextResponse } from "next/server";
-import { createSupabaseServer } from "@/lib/supabaseServer";
-import { emails, sendEmail } from "@/lib/emails";
+import { NextRequest, NextResponse } from 'next/server';
+import { NasioReturnSchema, isValidReturnToken } from '@/lib/nasio';
+import { supabaseServer } from '@/lib/supabaseServer';
 
-export async function POST(req: Request) {
-  const secret = process.env.ZAPIER_WEBHOOK_SECRET;
-  const provided = new URL(req.url).searchParams.get("secret");
-  if (secret && secret !== provided) return NextResponse.json({ error: "Bad secret" }, { status: 401 });
 
-  const body = await req.json().catch(() => null);
-  // Expected JSON from Zapier: { email, planId, action: "activate" | "cancel" | "expire", periodEnd? }
-  if (!body?.email || !body?.planId || !body?.action) {
-    return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
-  }
+export async function POST(req: NextRequest) {
+const body = await req.json();
+const parsed = NasioReturnSchema.safeParse(body);
+if (!parsed.success) return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
+const { plan, email, token } = parsed.data;
 
-  const supabase = createSupabaseServer();
 
-  // Ensure user exists
-  const { data: list } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1, email: body.email });
-  let user = list?.users?.[0];
-  if (!user) {
-    await supabase.auth.admin.inviteUserByEmail(body.email);
-    const { data: list2 } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1, email: body.email });
-    user = list2?.users?.[0];
-  }
-  if (!user) return NextResponse.json({ error: "Cannot create user" }, { status: 500 });
+if (!isValidReturnToken(token)) {
+return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+}
 
-  const statusMap: Record<string, string> = {
-    activate: "active",
-    cancel: "canceled",
-    expire: "expired"
-  };
-  const status = statusMap[body.action] ?? "active";
 
-  await supabase
-    .from("subscriptions")
-    .insert({
-      user_id: user.id,
-      plan: body.planId,
-      status,
-      current_period_end: body.periodEnd || null
-    })
-    .select()
-    .single();
+const supabase = supabaseServer();
+const expires = new Date();
+if (plan.endsWith('yearly')) expires.setMonth(expires.getMonth() + 12); else expires.setMonth(expires.getMonth() + 1);
 
-  if (status === "active") await sendEmail(body.email, "Welcome!", emails.welcome(body.planId));
-  if (status === "expired") await sendEmail(body.email, "Your plan expired", emails.expired(body.planId));
 
-  return NextResponse.json({ ok: true });
+const { data: profile } = await supabase.from('profiles').select('id').eq('email', email).maybeSingle();
+const user_id = profile?.id ?? null;
+
+
+if (user_id) {
+await supabase.from('subscriptions').upsert({ user_id, plan, status: 'active', expires_at: expires.toISOString() }, { onConflict: 'user_id' });
+}
+
+
+return NextResponse.json({ ok: true });
 }
