@@ -1,4 +1,126 @@
-:root { color-scheme: light; }
-body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Noto Sans, "Apple Color Emoji", "Segoe UI Emoji"; }
-* { box-sizing: border-box; }
-input,button,textarea,select { outline: none; }
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-brand-dark text-white font-sans;
+}
+
+/* Fallback styles for environments where Tailwind processing is unavailable */
+:root {
+  color-scheme: dark;
+  --color-brand-dark: #0a0a23;
+  --color-brand-accent: #00ffd5;
+}
+
+body {
+  background-color: var(--color-brand-dark);
+  color: #ffffff;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  margin: 0;
+}
+
+.min-h-screen {
+  min-height: 100vh;
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.space-y-6 > * + * {
+  margin-top: 1.5rem;
+}
+
+.text-5xl {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.text-brand-accent {
+  color: var(--color-brand-accent);
+}
+
+.text-lg {
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+}
+
+.max-w-xl {
+  max-width: 36rem;
+}
+
+.px-6 {
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+.py-3 {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+.bg-brand-accent {
+  background-color: var(--color-brand-accent);
+}
+
+.text-brand-dark {
+  color: var(--color-brand-dark);
+}
+
+.font-semibold {
+  font-weight: 600;
+}
+
+.rounded-xl {
+  border-radius: 0.75rem;
+}
+
+.transition {
+  transition: all 0.2s ease-in-out;
+}
+
+.hover\:opacity-80:hover {
+  opacity: 0.8;
+}
+
+.absolute {
+  position: absolute;
+}
+
+.bottom-5 {
+  bottom: 1.25rem;
+}
+
+.text-sm {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.opacity-70 {
+  opacity: 0.7;
+}
+
+.font-sans {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
