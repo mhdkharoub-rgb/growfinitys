@@ -1,14 +1,44 @@
+import type { z } from 'zod';
+
 import { NasioReturnSchema, isValidReturnToken } from '@/lib/nasio';
 import { supabaseServer } from '@/lib/supabaseServer';
 
 export const dynamic = 'force-dynamic';
 
-type SearchParams = Record<string, string | string[]>;
+type SearchParams = Record<string, string | string[] | undefined>;
+type NasioReturn = z.infer<typeof NasioReturnSchema>;
+
+const PLAN_LABELS: Record<NasioReturn['plan'], string> = {
+  basic: 'Basic (monthly)',
+  'basic-yearly': 'Basic (yearly)',
+  pro: 'Pro (monthly)',
+  'pro-yearly': 'Pro (yearly)',
+  vip: 'VIP (monthly)',
+  'vip-yearly': 'VIP (yearly)',
+};
+
+function pickFirstValue(value: string | string[] | undefined) {
+  if (Array.isArray(value)) {
+    return value.find((entry) => typeof entry === 'string' && entry.trim().length > 0) ?? value[0];
+  }
+
+  return value;
+}
 
 function normalizeParams(searchParams: SearchParams) {
-  return Object.fromEntries(
-    Object.entries(searchParams).map(([key, value]) => [key, Array.isArray(value) ? value[0] : value])
-  );
+  const entries: Array<[string, string]> = [];
+
+  for (const [key, rawValue] of Object.entries(searchParams)) {
+    const candidate = pickFirstValue(rawValue);
+    if (typeof candidate !== 'string') continue;
+
+    const trimmed = candidate.trim();
+    if (!trimmed) continue;
+
+    entries.push([key, trimmed]);
+  }
+
+  return Object.fromEntries(entries) as Partial<Record<string, string>>;
 }
 
 function InvalidPayloadMessage() {
@@ -39,7 +69,11 @@ function MissingConfigurationMessage() {
 }
 
 export default async function JoinSuccess({ searchParams }: { searchParams: SearchParams }) {
-  const parsed = NasioReturnSchema.safeParse(normalizeParams(searchParams));
+  const normalized = normalizeParams(searchParams);
+  const parsed = NasioReturnSchema.safeParse({
+    ...normalized,
+    ...(normalized.plan ? { plan: normalized.plan.toLowerCase() } : {}),
+  });
   if (!parsed.success) return <InvalidPayloadMessage />;
 
   const { plan, email, token } = parsed.data;
@@ -51,7 +85,7 @@ export default async function JoinSuccess({ searchParams }: { searchParams: Sear
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('id')
-    .eq('email', email)
+    .ilike('email', email.toLowerCase())
     .maybeSingle();
 
   if (profileError) {
@@ -94,7 +128,7 @@ export default async function JoinSuccess({ searchParams }: { searchParams: Sear
     <div className="space-y-4">
       <h1 className="text-2xl font-semibold">Payment received 🎉</h1>
       <p>
-        Your plan <b>{plan}</b> is now associated with <b>{email}</b>.
+        Your plan <b>{PLAN_LABELS[plan] ?? plan}</b> is now associated with <b>{email}</b>.
       </p>
       {profile?.id ? (
         <p>

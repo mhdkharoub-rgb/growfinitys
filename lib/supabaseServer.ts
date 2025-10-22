@@ -1,12 +1,17 @@
-import { cookies } from "next/headers";
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { cookies } from 'next/headers';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
+
+let hasLoggedMissingConfig = false;
 
 function createServerSupabaseClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!url || !anonKey) {
-    console.warn("Supabase environment variables are not configured.");
+    if (!hasLoggedMissingConfig) {
+      console.warn('Supabase environment variables are not configured.');
+      hasLoggedMissingConfig = true;
+    }
     return null;
   }
 
@@ -27,7 +32,7 @@ function createServerSupabaseClient() {
       },
       remove(name: string, options: CookieOptions) {
         try {
-          cookieStore.set({ name, value: "", ...options, maxAge: 0 });
+          cookieStore.set({ name, value: '', ...options, maxAge: 0 });
         } catch (error) {
           // Ignore failures for environments where the cookie store is read-only.
         }
