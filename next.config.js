@@ -12,6 +12,14 @@ const normalizeDistDir = () => {
     return undefined;
   }
 
+  if (/\s/.test(trimmed)) {
+    console.warn(
+      `next.config.js: Ignoring NEXT_DIST_DIR="${raw}" because it contains whitespace characters. Falling back to ".next".`
+    );
+    delete process.env.NEXT_DIST_DIR;
+    return undefined;
+  }
+
   if (trimmed !== raw) {
     console.warn(
       `next.config.js: Normalized NEXT_DIST_DIR from "${raw}" to "${trimmed}"`
