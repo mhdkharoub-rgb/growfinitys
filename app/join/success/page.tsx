@@ -8,7 +8,6 @@ export default async function JoinSuccess({ searchParams }: { searchParams: Reco
     Object.entries(searchParams).map(([k, v]) => [k, Array.isArray(v) ? v[0] : v])
   );
   const parsed = NasioReturnSchema.safeParse(qp);
-  const supabase = supabaseServer();
 
   if (!parsed.success) {
     return (
@@ -25,6 +24,16 @@ export default async function JoinSuccess({ searchParams }: { searchParams: Reco
       <div className="space-y-3">
         <h1 className="text-xl font-semibold">Almost there</h1>
         <p>Return token invalid. Please use the official pricing buttons so we can activate instantly.</p>
+      </div>
+    );
+  }
+
+  const supabase = supabaseServer();
+  if (!supabase) {
+    return (
+      <div className="space-y-3">
+        <h1 className="text-xl font-semibold">Configuration required</h1>
+        <p>Supabase is not configured. Please contact support to complete your activation.</p>
       </div>
     );
   }

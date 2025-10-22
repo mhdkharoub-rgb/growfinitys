@@ -12,6 +12,11 @@ export default function Signup() {
 
     try {
       const supabase = supabaseClient();
+      if (!supabase) {
+        setMsg('Supabase is not configured. Please try again later.');
+        return;
+      }
+
       const { error } = await supabase.auth.signUp({ email, password });
       setMsg(error ? error.message : 'Account created! Check your email to confirm.');
       if (!error) window.location.href = '/dashboard';

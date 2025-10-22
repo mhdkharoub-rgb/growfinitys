@@ -7,8 +7,12 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  const sig = generateSignal('daily');
   const supabase = supabaseServer();
+  if (!supabase) {
+    return NextResponse.json({ error: 'Supabase is not configured.' }, { status: 500 });
+  }
+
+  const sig = generateSignal('daily');
   const { error } = await supabase.from('signals').insert(sig);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 

@@ -6,7 +6,8 @@ export function supabaseClient() {
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!url || !anonKey) {
-    throw new Error('Supabase environment variables are not configured.');
+    console.warn('Supabase environment variables are not configured.');
+    return null;
   }
 
   return createBrowserClient(url, anonKey);

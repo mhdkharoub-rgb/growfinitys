@@ -15,6 +15,9 @@ export async function POST(req: NextRequest) {
   }
 
   const supabase = supabaseServer();
+  if (!supabase) {
+    return NextResponse.json({ error: 'Supabase is not configured.' }, { status: 500 });
+  }
   const expires = new Date();
   if (plan.endsWith('yearly')) expires.setMonth(expires.getMonth() + 12);
   else expires.setMonth(expires.getMonth() + 1);

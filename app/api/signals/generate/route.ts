@@ -7,13 +7,17 @@ import { sendSignalEmail } from '@/lib/emails';
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
+  const supabase = supabaseServer();
+  if (!supabase) {
+    return NextResponse.json({ error: 'Supabase is not configured.' }, { status: 500 });
+  }
+
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
 
   const kind = (new URL(req.url).searchParams.get('kind') ?? 'hourly') as 'hourly' | 'daily' | 'monthly';
   const sig = generateSignal(kind);
 
-  const supabase = supabaseServer();
   const { data, error } = await supabase.from('signals').insert(sig).select('*').single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 

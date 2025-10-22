@@ -12,6 +12,11 @@ export default function Login() {
 
     try {
       const supabase = supabaseClient();
+      if (!supabase) {
+        setMsg('Supabase is not configured. Please try again later.');
+        return;
+      }
+
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       setMsg(error ? error.message : 'Logged in!');
       if (!error) window.location.href = '/dashboard';
