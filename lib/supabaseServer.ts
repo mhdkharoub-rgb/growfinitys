@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 
 /**
- * Returns a Supabase client configured for server-side use.
+ * Creates a Supabase client configured for server-side usage.
  */
 export function createSupabaseServerClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -24,14 +24,14 @@ export function createSupabaseServerClient() {
         try {
           cookieStore.set({ name, value, ...options });
         } catch {
-          // ignore read-only contexts (route handlers)
+          // read-only context, ignore
         }
       },
       remove(name: string, options: CookieOptions) {
         try {
           cookieStore.set({ name, value: "", ...options, maxAge: 0 });
         } catch {
-          // ignore read-only contexts
+          // ignore in read-only contexts
         }
       },
     },
