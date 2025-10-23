@@ -4,10 +4,13 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        brand: {
-          dark: "#0a0a23",
-          accent: "#00ffd5",
-        },
+        gold: "#d4af37",
+        goldDark: "#b8860b",
+        black: "#0a0a0a",
+      },
+      fontFamily: {
+        sans: ["Inter", "sans-serif"],
+        poppins: ["Poppins", "sans-serif"],
       },
     },
   },

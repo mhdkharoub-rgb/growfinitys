@@ -1,31 +1,35 @@
 export default function Home() {
   return (
-    <main className="min-h-screen bg-gradient-to-b from-[#030712] to-[#0b132b] text-white flex flex-col items-center justify-center text-center px-6">
-      <h1 className="text-5xl md:text-6xl font-bold text-[#00ff95] mb-6 tracking-tight">
+    <main className="min-h-screen bg-black flex flex-col items-center justify-center text-center px-6 relative overflow-hidden">
+      {/* Subtle gold gradient glow */}
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[rgba(212,175,55,0.05)] to-transparent blur-3xl pointer-events-none" />
+
+      <h1 className="text-6xl md:text-7xl font-poppins font-bold text-gold mb-6 tracking-tight drop-shadow-[0_0_10px_rgba(212,175,55,0.5)]">
         Growfinitys Signals
       </h1>
-      <p className="max-w-2xl text-lg opacity-90 mb-10">
-        Get instant Forex & Crypto signals from trusted analysts. 
-        Real-time alerts, risk management, and verified performance — all in one place.
+
+      <p className="text-gray-300 max-w-2xl text-lg md:text-xl mb-10">
+        Exclusive <span className="text-gold">Forex</span> & <span className="text-gold">Crypto</span> signals.  
+        Accuracy, Speed, and Transparency for serious traders.
       </p>
 
-      <div className="flex space-x-4">
+      <div className="flex flex-wrap gap-4 justify-center">
         <a
           href="/pricing"
-          className="bg-[#00ff95] text-black font-semibold px-8 py-3 rounded-xl hover:opacity-80 transition"
+          className="bg-gold text-black font-semibold px-8 py-3 rounded-xl hover:bg-goldDark transition"
         >
           View Plans
         </a>
         <a
           href="/join"
-          className="border border-[#00ff95] text-[#00ff95] px-8 py-3 rounded-xl hover:bg-[#00ff95] hover:text-black transition"
+          className="border border-gold text-gold px-8 py-3 rounded-xl hover:bg-gold hover:text-black transition"
         >
-          Join Telegram
+          Join Now
         </a>
       </div>
 
-      <div className="mt-20 opacity-60 text-sm">
-        © {new Date().getFullYear()} Growfinitys Signals — All Rights Reserved.
+      <div className="absolute bottom-10 text-sm text-gray-500">
+        © {new Date().getFullYear()} Growfinitys Signals — All Rights Reserved
       </div>
     </main>
   );
