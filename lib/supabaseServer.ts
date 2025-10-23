@@ -23,16 +23,12 @@ export function createSupabaseServerClient() {
       set(name: string, value: string, options: CookieOptions) {
         try {
           cookieStore.set({ name, value, ...options });
-        } catch {
-          // ignore read-only contexts
-        }
+        } catch {}
       },
       remove(name: string, options: CookieOptions) {
         try {
           cookieStore.set({ name, value: "", ...options, maxAge: 0 });
-        } catch {
-          // ignore read-only contexts
-        }
+        } catch {}
       },
     },
   });
