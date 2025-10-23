@@ -35,3 +35,5 @@ export function supabaseServer() {
     },
   });
 }
+
+export const supabaseServer = createServerSupabaseClient;

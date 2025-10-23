@@ -1,3 +1,5 @@
+import type { z } from 'zod';
+
 import { NasioReturnSchema, isValidReturnToken } from '@/lib/nasio';
 import { supabaseServer } from '@/lib/supabaseServer';
 
