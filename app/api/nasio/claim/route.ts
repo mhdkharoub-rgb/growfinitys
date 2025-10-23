@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { NasioReturnSchema, isValidReturnToken } from '@/lib/nasio';
-import { supabaseServer } from '@/lib/supabaseServer';
+import { createSupabaseServerClient } from '@/lib/supabaseServer';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
   }
 
-  const supabase = supabaseServer();
+  const supabase = createSupabaseServerClient();
   if (!supabase) {
     return NextResponse.json({ error: 'Supabase is not configured.' }, { status: 500 });
   }

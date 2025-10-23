@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth';
 import { generateSignal } from '@/lib/signals';
-import { supabaseServer } from '@/lib/supabaseServer';
+import { createSupabaseServerClient } from '@/lib/supabaseServer';
 import { sendSignalEmail } from '@/lib/emails';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
-  const supabase = supabaseServer();
+  const supabase = createSupabaseServerClient();
   if (!supabase) {
     return NextResponse.json({ error: 'Supabase is not configured.' }, { status: 500 });
   }

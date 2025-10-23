@@ -1,7 +1,7 @@
-import { supabaseServer } from '@/lib/supabaseServer';
+import { createSupabaseServerClient } from '@/lib/supabaseServer';
 
 export default async function SignalList() {
-  const supabase = supabaseServer();
+  const supabase = createSupabaseServerClient();
   if (!supabase) {
     return <div className="text-sm text-red-600">Supabase is not configured.</div>;
   }

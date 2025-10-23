@@ -1,7 +1,7 @@
-import { supabaseServer } from './supabaseServer';
+import { createSupabaseServerClient } from './supabaseServer';
 
 export async function getSession() {
-  const supabase = supabaseServer();
+  const supabase = createSupabaseServerClient();
   if (!supabase) return null;
 
   const {
@@ -11,7 +11,7 @@ export async function getSession() {
 }
 
 export async function requireAdmin() {
-  const supabase = supabaseServer();
+  const supabase = createSupabaseServerClient();
   if (!supabase) return null;
 
   const {
@@ -25,7 +25,7 @@ export async function requireAdmin() {
 }
 
 export async function getActiveSubscription(userId: string) {
-  const supabase = supabaseServer();
+  const supabase = createSupabaseServerClient();
   if (!supabase) return null;
 
   const { data } = await supabase
