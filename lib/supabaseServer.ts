@@ -23,19 +23,13 @@ export function createSupabaseServerClient() {
       set(name: string, value: string, options: CookieOptions) {
         try {
           cookieStore.set({ name, value, ...options });
-        } catch {
-          // read-only context, ignore
-        }
+        } catch {}
       },
       remove(name: string, options: CookieOptions) {
         try {
           cookieStore.set({ name, value: "", ...options, maxAge: 0 });
-        } catch {
-          // ignore in read-only contexts
-        }
+        } catch {}
       },
     },
   });
 }
-
-export const supabaseServer = createServerSupabaseClient;
