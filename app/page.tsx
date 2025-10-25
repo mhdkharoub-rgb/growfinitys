@@ -48,7 +48,7 @@ export default function Home() {
     <main className="min-h-screen bg-black text-white font-sans overflow-x-hidden">
       {/* HERO */}
       <section className="flex flex-col items-center justify-center text-center min-h-screen relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[rgba(212,175,55,0.05)] to-transparent blur-3xl" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[rgba(212,175,55,0.05)] to-transparent blur-3xl pointer-events-none" />
         <h1 className="glow-text text-6xl md:text-7xl font-poppins font-bold text-gold mb-6">
           Growfinitys Signals
         </h1>
