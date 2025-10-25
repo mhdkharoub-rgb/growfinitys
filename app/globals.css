@@ -2,9 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  @apply bg-black text-white font-sans;
-}
+body { @apply bg-black text-white font-sans; }
 
 @keyframes goldPulse {
   0%, 100% { opacity: 0.6; filter: drop-shadow(0 0 10px #d4af37); }

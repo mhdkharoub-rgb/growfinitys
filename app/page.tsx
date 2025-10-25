@@ -5,19 +5,21 @@ import { useRouter } from "next/navigation";
 
 export default function Home() {
   const router = useRouter();
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const supabase = useMemo(() => {
     if (typeof window === "undefined") {
       return null;
     }
 
-    if (!supabaseUrl || !supabaseAnonKey) {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!url || !anonKey) {
+      console.warn("Supabase environment variables are not configured.");
       return null;
     }
 
-    return createBrowserClient(supabaseUrl, supabaseAnonKey);
-  }, [supabaseUrl, supabaseAnonKey]);
+    return createBrowserClient(url, anonKey);
+  }, []);
   const [showLogin, setShowLogin] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -32,6 +34,7 @@ export default function Home() {
       setLoading(false);
       return;
     }
+
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) setError(error.message);
@@ -91,16 +94,60 @@ export default function Home() {
         <h2 className="text-4xl font-bold text-gold mb-10">Membership Plans</h2>
         <div className="flex flex-wrap justify-center gap-6">
           {[
-            { name: "Basic", price: "19", perks: ["Daily Signals", "Email Support"] },
-            { name: "Pro", price: "49", perks: ["All Basic Perks", "VIP Group", "Performance Dashboard"] },
-            { name: "VIP", price: "99", perks: ["Private Alerts", "1-on-1 Coaching", "Lifetime Access"] },
+            {
+              name: "Basic",
+              price: "29",
+              yearly: "290",
+              perks: [
+                "AI-filtered Forex & Crypto signals (3–5/day)",
+                "Market overview summary every morning",
+                "Email notifications for each trade alert",
+                "Access to member dashboard",
+                "Basic AI chat support (24/7)",
+                "10% off upgrades to Pro or VIP",
+              ],
+            },
+            {
+              name: "Pro",
+              price: "59",
+              yearly: "590",
+              perks: [
+                "Priority signal delivery (5–10/day)",
+                "AI trade summaries and reasoning per signal",
+                "Auto-Risk Manager (AI-generated lot size & SL/TP)",
+                "Weekly AI market recap video",
+                "Telegram and mobile push alerts",
+                "AI portfolio tracking dashboard",
+                "Priority AI chat + analyst-assisted support",
+              ],
+            },
+            {
+              name: "VIP",
+              price: "99",
+              yearly: "990",
+              perks: [
+                "Auto-Trade Execution Bot (MT4, Binance, or TradingView)",
+                "Custom AI signal filters (choose your own risk level)",
+                "Private 1-on-1 strategy session each month",
+                "Real-time AI Market Radar dashboard",
+                "VIP Telegram & Discord private channels",
+                "Early access to AI backtesting and new trading tools",
+                "Dedicated personal account manager",
+              ],
+            },
           ].map((plan) => (
             <div
               key={plan.name}
               className="w-72 p-6 border border-gold/30 rounded-2xl hover:border-gold hover:scale-105 transition"
             >
               <h3 className="text-2xl font-semibold text-gold mb-2">{plan.name}</h3>
-              <p className="text-4xl font-bold mb-4">${plan.price}</p>
+              <p className="text-4xl font-bold mb-2">
+                ${plan.price}
+                <span className="text-sm font-normal text-gray-400"> /month</span>
+              </p>
+              <p className="text-sm text-gray-400 mb-4">
+                or <span className="text-gold font-semibold">${plan.yearly}</span> yearly (save 2 months)
+              </p>
               <ul className="text-gray-400 space-y-2 mb-6">
                 {plan.perks.map((p) => (
                   <li key={p}>• {p}</li>
@@ -110,7 +157,7 @@ export default function Home() {
                 onClick={() => setShowLogin(true)}
                 className="bg-gold text-black w-full py-2 rounded-lg font-semibold hover:bg-goldDark transition"
               >
-                Join Now
+                Activate AI Plan
               </button>
             </div>
           ))}

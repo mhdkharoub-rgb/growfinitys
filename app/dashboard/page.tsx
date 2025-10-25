@@ -5,25 +5,28 @@ import { useRouter } from "next/navigation";
 
 export default function Dashboard() {
   const router = useRouter();
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const supabase = useMemo(() => {
     if (typeof window === "undefined") {
       return null;
     }
 
-    if (!supabaseUrl || !supabaseAnonKey) {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!url || !anonKey) {
+      console.warn("Supabase environment variables are not configured.");
       return null;
     }
 
-    return createBrowserClient(supabaseUrl, supabaseAnonKey);
-  }, [supabaseUrl, supabaseAnonKey]);
+    return createBrowserClient(url, anonKey);
+  }, []);
 
   async function handleLogout() {
     if (!supabase) {
       router.push("/");
       return;
     }
+
     await supabase.auth.signOut();
     router.push("/");
   }
