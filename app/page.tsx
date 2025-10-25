@@ -5,26 +5,23 @@ import { useRouter } from "next/navigation";
 
 export default function Home() {
   const router = useRouter();
-  const supabase = useMemo(() => {
-    if (typeof window === "undefined") {
-      return null;
-    }
-
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-    if (!url || !anonKey) {
-      console.warn("Supabase environment variables are not configured.");
-      return null;
-    }
-
-    return createBrowserClient(url, anonKey);
-  }, []);
   const [showLogin, setShowLogin] = useState(false);
+  const [showSignup, setShowSignup] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  const supabase = useMemo(() => {
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return null;
+    }
+
+    return createBrowserClient(supabaseUrl, supabaseAnonKey);
+  }, [supabaseUrl, supabaseAnonKey]);
 
   async function handleLogin() {
     setLoading(true);
@@ -44,6 +41,24 @@ export default function Home() {
     }
   }
 
+  async function handleSignup() {
+    setLoading(true);
+    setError(null);
+    if (!supabase) {
+      setError("Supabase is not configured. Please try again later.");
+      setLoading(false);
+      return;
+    }
+
+    const { error } = await supabase.auth.signUp({ email, password });
+    setLoading(false);
+    if (error) setError(error.message);
+    else {
+      setShowSignup(false);
+      router.push("/dashboard");
+    }
+  }
+
   return (
     <main className="min-h-screen bg-black text-white font-sans overflow-x-hidden">
       {/* HERO */}
@@ -56,12 +71,28 @@ export default function Home() {
           Premium <span className="text-gold">Forex</span> & <span className="text-gold">Crypto</span> trading signals.
           Accurate entries, trusted analysis, and VIP alerts.
         </p>
-        <button
-          onClick={() => setShowLogin(true)}
-          className="bg-gold text-black font-semibold px-8 py-3 rounded-xl hover:bg-goldDark transition"
-        >
-          Login / Join Now
-        </button>
+        <div className="flex flex-wrap gap-4 justify-center">
+          <button
+            onClick={() => {
+              setError(null);
+              setShowSignup(true);
+              setShowLogin(false);
+            }}
+            className="bg-gold text-black px-8 py-3 rounded-lg font-semibold hover:bg-goldDark transition"
+          >
+            Join Now
+          </button>
+          <button
+            onClick={() => {
+              setError(null);
+              setShowLogin(true);
+              setShowSignup(false);
+            }}
+            className="border border-gold text-gold px-8 py-3 rounded-lg font-semibold hover:bg-gold hover:text-black transition"
+          >
+            Login
+          </button>
+        </div>
       </section>
 
       {/* FEATURES */}
@@ -149,12 +180,16 @@ export default function Home() {
                 or <span className="text-gold font-semibold">${plan.yearly}</span> yearly (save 2 months)
               </p>
               <ul className="text-gray-400 space-y-2 mb-6">
-                {plan.perks.map((p) => (
-                  <li key={p}>• {p}</li>
+                {plan.perks.map((perk) => (
+                  <li key={perk}>• {perk}</li>
                 ))}
               </ul>
               <button
-                onClick={() => setShowLogin(true)}
+                onClick={() => {
+                  setError(null);
+                  setShowSignup(true);
+                  setShowLogin(false);
+                }}
                 className="bg-gold text-black w-full py-2 rounded-lg font-semibold hover:bg-goldDark transition"
               >
                 Activate AI Plan
@@ -195,8 +230,77 @@ export default function Home() {
             >
               {loading ? "Logging in..." : "Login"}
             </button>
+            <p className="text-gray-400 mt-4 text-sm">
+              Need an account?{" "}
+              <span
+                onClick={() => {
+                  setShowLogin(false);
+                  setShowSignup(true);
+                  setError(null);
+                }}
+                className="text-gold cursor-pointer hover:underline"
+              >
+                Join now
+              </span>
+            </p>
             <button
-              onClick={() => setShowLogin(false)}
+              onClick={() => {
+                setShowLogin(false);
+                setError(null);
+              }}
+              className="mt-4 text-sm text-gray-400 hover:text-gold transition"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* SIGNUP MODAL */}
+      {showSignup && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+          <div className="bg-zinc-900 p-8 rounded-xl w-full max-w-md shadow-lg border border-gold">
+            <h2 className="text-2xl font-bold mb-4 text-gold">Create Account</h2>
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full p-2 mb-3 bg-black border border-zinc-700 rounded-lg text-white"
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full p-2 mb-3 bg-black border border-zinc-700 rounded-lg text-white"
+            />
+            {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
+            <button
+              onClick={handleSignup}
+              disabled={loading}
+              className="bg-gold text-black w-full py-2 rounded-lg font-semibold hover:bg-goldDark transition"
+            >
+              {loading ? "Creating..." : "Join Now"}
+            </button>
+            <p className="text-gray-400 mt-4 text-sm">
+              Already have an account?{" "}
+              <span
+                onClick={() => {
+                  setShowSignup(false);
+                  setShowLogin(true);
+                  setError(null);
+                }}
+                className="text-gold cursor-pointer hover:underline"
+              >
+                Log in
+              </span>
+            </p>
+            <button
+              onClick={() => {
+                setShowSignup(false);
+                setError(null);
+              }}
               className="mt-4 text-sm text-gray-400 hover:text-gold transition"
             >
               Close
