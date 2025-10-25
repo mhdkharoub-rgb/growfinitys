@@ -73,7 +73,7 @@ export default function Home() {
         </p>
         <div className="flex flex-wrap gap-4 justify-center">
           <button
-            onClick={() => window.open("https://nas.io/growfinitys", "_blank")}
+            onClick={() => window.open("https://nas.io/growfinitys/zerolink/basic", "_blank")}
             className="bg-gold text-black px-8 py-3 rounded-lg font-semibold hover:bg-goldDark transition"
           >
             Join Now
@@ -133,6 +133,8 @@ export default function Home() {
                 "Basic AI chat support (24/7)",
                 "10% off upgrades to Pro or VIP",
               ],
+              monthlyLink: "https://nas.io/growfinitys/zerolink/basic",
+              yearlyLink: "https://nas.io/growfinitys/zerolink/basic-yearly",
             },
             {
               name: "Pro",
@@ -147,6 +149,8 @@ export default function Home() {
                 "AI portfolio tracking dashboard",
                 "Priority AI chat + analyst-assisted support",
               ],
+              monthlyLink: "https://nas.io/growfinitys/zerolink/pro",
+              yearlyLink: "https://nas.io/growfinitys/zerolink/pro-yearly",
             },
             {
               name: "VIP",
@@ -161,36 +165,41 @@ export default function Home() {
                 "Early access to AI backtesting and new trading tools",
                 "Dedicated personal account manager",
               ],
+              monthlyLink: "https://nas.io/growfinitys/zerolink/vip",
+              yearlyLink: "https://nas.io/growfinitys/zerolink/vip-yearly",
             },
-          ].map((plan) => {
-            const slug = plan.name.toLowerCase();
-            return (
-              <div
-                key={plan.name}
-                className="w-72 p-6 border border-gold/30 rounded-2xl hover:border-gold hover:scale-105 transition"
+          ].map((plan) => (
+            <div
+              key={plan.name}
+              className="w-72 p-6 border border-gold/30 rounded-2xl hover:border-gold hover:scale-105 transition"
+            >
+              <h3 className="text-2xl font-semibold text-gold mb-2">{plan.name}</h3>
+              <p className="text-4xl font-bold mb-2">
+                ${plan.price}
+                <span className="text-sm font-normal text-gray-400"> /month</span>
+              </p>
+              <p className="text-sm text-gray-400 mb-4">
+                or <span className="text-gold font-semibold">${plan.yearly}</span> yearly (save 2 months)
+              </p>
+              <ul className="text-gray-400 space-y-2 mb-6">
+                {plan.perks.map((perk) => (
+                  <li key={perk}>• {perk}</li>
+                ))}
+              </ul>
+              <button
+                onClick={() => window.open(plan.monthlyLink, "_blank")}
+                className="bg-gold text-black w-full py-2 rounded-lg font-semibold hover:bg-goldDark transition"
               >
-                <h3 className="text-2xl font-semibold text-gold mb-2">{plan.name}</h3>
-                <p className="text-4xl font-bold mb-2">
-                  ${plan.price}
-                  <span className="text-sm font-normal text-gray-400"> /month</span>
-                </p>
-                <p className="text-sm text-gray-400 mb-4">
-                  or <span className="text-gold font-semibold">${plan.yearly}</span> yearly (save 2 months)
-                </p>
-                <ul className="text-gray-400 space-y-2 mb-6">
-                  {plan.perks.map((perk) => (
-                    <li key={perk}>• {perk}</li>
-                  ))}
-                </ul>
-                <button
-                  onClick={() => window.open(`https://nas.io/growfinitys/${slug}`, "_blank")}
-                  className="bg-gold text-black w-full py-2 rounded-lg font-semibold hover:bg-goldDark transition"
-                >
-                  Join {plan.name}
-                </button>
-              </div>
-            );
-          })}
+                Join {plan.name} Monthly
+              </button>
+              <button
+                onClick={() => window.open(plan.yearlyLink, "_blank")}
+                className="border border-gold text-gold w-full py-2 rounded-lg font-semibold hover:bg-gold hover:text-black transition mt-2"
+              >
+                Join {plan.name} Yearly
+              </button>
+            </div>
+          ))}
         </div>
       </section>
 
