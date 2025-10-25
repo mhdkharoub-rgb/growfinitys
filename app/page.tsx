@@ -73,11 +73,7 @@ export default function Home() {
         </p>
         <div className="flex flex-wrap gap-4 justify-center">
           <button
-            onClick={() => {
-              setError(null);
-              setShowSignup(true);
-              setShowLogin(false);
-            }}
+            onClick={() => window.open("https://nas.io/growfinitys", "_blank")}
             className="bg-gold text-black px-8 py-3 rounded-lg font-semibold hover:bg-goldDark transition"
           >
             Join Now
@@ -166,36 +162,35 @@ export default function Home() {
                 "Dedicated personal account manager",
               ],
             },
-          ].map((plan) => (
-            <div
-              key={plan.name}
-              className="w-72 p-6 border border-gold/30 rounded-2xl hover:border-gold hover:scale-105 transition"
-            >
-              <h3 className="text-2xl font-semibold text-gold mb-2">{plan.name}</h3>
-              <p className="text-4xl font-bold mb-2">
-                ${plan.price}
-                <span className="text-sm font-normal text-gray-400"> /month</span>
-              </p>
-              <p className="text-sm text-gray-400 mb-4">
-                or <span className="text-gold font-semibold">${plan.yearly}</span> yearly (save 2 months)
-              </p>
-              <ul className="text-gray-400 space-y-2 mb-6">
-                {plan.perks.map((perk) => (
-                  <li key={perk}>• {perk}</li>
-                ))}
-              </ul>
-              <button
-                onClick={() => {
-                  setError(null);
-                  setShowSignup(true);
-                  setShowLogin(false);
-                }}
-                className="bg-gold text-black w-full py-2 rounded-lg font-semibold hover:bg-goldDark transition"
+          ].map((plan) => {
+            const slug = plan.name.toLowerCase();
+            return (
+              <div
+                key={plan.name}
+                className="w-72 p-6 border border-gold/30 rounded-2xl hover:border-gold hover:scale-105 transition"
               >
-                Activate AI Plan
-              </button>
-            </div>
-          ))}
+                <h3 className="text-2xl font-semibold text-gold mb-2">{plan.name}</h3>
+                <p className="text-4xl font-bold mb-2">
+                  ${plan.price}
+                  <span className="text-sm font-normal text-gray-400"> /month</span>
+                </p>
+                <p className="text-sm text-gray-400 mb-4">
+                  or <span className="text-gold font-semibold">${plan.yearly}</span> yearly (save 2 months)
+                </p>
+                <ul className="text-gray-400 space-y-2 mb-6">
+                  {plan.perks.map((perk) => (
+                    <li key={perk}>• {perk}</li>
+                  ))}
+                </ul>
+                <button
+                  onClick={() => window.open(`https://nas.io/growfinitys/${slug}`, "_blank")}
+                  className="bg-gold text-black w-full py-2 rounded-lg font-semibold hover:bg-goldDark transition"
+                >
+                  Join {plan.name}
+                </button>
+              </div>
+            );
+          })}
         </div>
       </section>
 
