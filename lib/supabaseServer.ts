@@ -1,24 +1,27 @@
 import { cookies } from "next/headers";
-import { createServerClient } from "@supabase/ssr";
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 
-export function createClient() {
-  const cookieStore = cookies();
+let warnedMissingConfig = false;
 
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+export function supabaseServer() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    if (!warnedMissingConfig) {
+      console.warn(
+        "Supabase environment variables are not configured. Server helpers will return null until NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set."
+      );
+      warnedMissingConfig = true;
+    }
+    return null;
+  }
+
+  return createServerComponentClient(
+    { cookies },
     {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
-        },
-        set() {
-          // no-op on server
-        },
-        remove() {
-          // no-op on server
-        },
-      },
+      supabaseUrl,
+      supabaseKey: supabaseAnonKey,
     }
   );
 }
