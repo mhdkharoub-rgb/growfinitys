@@ -1,33 +1,26 @@
-import { NextResponse } from 'next/server';
-import { generateSignal } from '@/lib/signals';
-import { createSupabaseServerClient } from '@/lib/supabaseServer';
-import { sendSignalEmail } from '@/lib/emails';
-
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
+import { NextResponse } from "next/server";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { notifyAdmin } from "@/lib/email";
 
 export async function GET() {
-  const supabase = supabaseServer();
-  if (!supabase) {
-    return NextResponse.json({ error: 'Supabase is not configured.' }, { status: 500 });
+  try {
+    const now = new Date().toISOString();
+    const { count: expired } = await supabaseAdmin
+      .from("subscriptions")
+      .update({ status: "expired" })
+      .lt("ends_at", now)
+      .neq("status", "expired")
+      .select("*", { count: "exact", head: true });
+
+    const { count: active } = await supabaseAdmin
+      .from("subscriptions")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "active");
+
+    const html = `<h2>Growfinitys — Daily Summary</h2><p>Active: ${active || 0}</p><p>Expired: ${expired || 0}</p>`;
+    await notifyAdmin("Daily Summary", html);
+    return NextResponse.json({ ok: true, active, expired });
+  } catch (e: any) {
+    return NextResponse.json({ ok: false, error: e.message });
   }
-
-  const sig = generateSignal('daily');
-  const { error } = await supabase.from('signals').insert(sig);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  const { data: subs } = await supabase
-    .from('subscriptions')
-    .select('profiles:profiles(email),expires_at,status')
-    .eq('status', 'active');
-
-  const recipients = (subs ?? [])
-    .filter((s) => new Date(s.expires_at) > new Date())
-    .map((s: any) => s.profiles?.email ?? s.email)
-    .filter(Boolean) as string[];
-
-  const html = `<h2>DAILY SIGNAL</h2><pre>${JSON.stringify(sig.payload, null, 2)}</pre>`;
-  await Promise.all(recipients.map((e) => sendSignalEmail(e, 'New daily signal', html)));
-
-  return NextResponse.json({ ok: true });
 }

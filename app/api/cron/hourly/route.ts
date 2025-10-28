@@ -1,33 +1,29 @@
-import { NextResponse } from 'next/server';
-import { generateSignal } from '@/lib/signals';
-import { createSupabaseServerClient } from '@/lib/supabaseServer';
-import { sendSignalEmail } from '@/lib/emails';
-
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
+import { NextResponse } from "next/server";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { sendEmail } from "@/lib/email";
 
 export async function GET() {
-  const supabase = supabaseServer();
-  if (!supabase) {
-    return NextResponse.json({ error: 'Supabase is not configured.' }, { status: 500 });
+  try {
+    const now = new Date().toISOString();
+    const { data: signals } = await supabaseAdmin
+      .from("signals")
+      .select("*")
+      .eq("status", "queued")
+      .lte("scheduled_at", now);
+
+    let sentCount = 0;
+    for (const s of signals || []) {
+      const { data: subs } = await supabaseAdmin.rpc("active_subscribers_for_audience", { p_audience: s.audience });
+      const emails = (subs || []).map((x: any) => x.email);
+      const subject = `📈 ${s.title || "New Signal"}`;
+      const html = `<h3>${s.title}</h3><p>${s.symbol} - ${s.type}</p>`;
+      await sendEmail({ to: emails, subject, html });
+      sentCount += emails.length;
+      await supabaseAdmin.from("signals").update({ status: "sent", sent_at: now }).eq("id", s.id);
+    }
+
+    return NextResponse.json({ ok: true, sentCount });
+  } catch (e: any) {
+    return NextResponse.json({ ok: false, error: e.message });
   }
-
-  const sig = generateSignal('hourly');
-  const { error } = await supabase.from('signals').insert(sig);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  const { data: subs } = await supabase
-    .from('subscriptions')
-    .select('profiles:profiles(email),expires_at,status')
-    .eq('status', 'active');
-
-  const recipients = (subs ?? [])
-    .filter((s) => new Date(s.expires_at) > new Date())
-    .map((s: any) => s.profiles?.email ?? s.email)
-    .filter(Boolean) as string[];
-
-  const html = `<h2>HOURLY SIGNAL</h2><pre>${JSON.stringify(sig.payload, null, 2)}</pre>`;
-  await Promise.all(recipients.map((e) => sendSignalEmail(e, 'New hourly signal', html)));
-
-  return NextResponse.json({ ok: true });
 }
