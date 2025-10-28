@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth';
 import { generateSignal } from '@/lib/signals';
-import { supabaseServer } from '@/lib/supabaseServer';
+import { createSupabaseServerClient } from '@/lib/supabaseServer';
 import { sendSignalEmail } from '@/lib/emails';
 
 export const dynamic = 'force-dynamic';
