@@ -1,7 +1,7 @@
 import type { z } from 'zod';
 
 import { NasioReturnSchema, isValidReturnToken } from '@/lib/nasio';
-import { createSupabaseServerClient } from '@/lib/supabaseServer';
+import { supabaseServer } from '@/lib/supabaseServer';
 
 export const dynamic = 'force-dynamic';
 
@@ -79,7 +79,7 @@ export default async function JoinSuccess({ searchParams }: { searchParams: Sear
   const { plan, email, token } = parsed.data;
   if (!isValidReturnToken(token)) return <InvalidTokenMessage />;
 
-  const supabase = createSupabaseServerClient();
+  const supabase = supabaseServer();
   if (!supabase) return <MissingConfigurationMessage />;
 
   const { data: profile, error: profileError } = await supabase

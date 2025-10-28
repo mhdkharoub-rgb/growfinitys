@@ -1,5 +1,6 @@
 'use client';
-import { createBrowserClient } from '@supabase/ssr';
+
+import { createBrowserSupabaseClient } from '@supabase/auth-helpers-nextjs';
 
 export function supabaseClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -10,5 +11,5 @@ export function supabaseClient() {
     return null;
   }
 
-  return createBrowserClient(url, anonKey);
+  return createBrowserSupabaseClient({ supabaseUrl: url, supabaseKey: anonKey });
 }

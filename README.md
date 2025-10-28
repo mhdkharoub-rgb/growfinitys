@@ -13,10 +13,7 @@
    - Monthly: `GET /api/cron/monthly`
 
 ### Dependency install tips
-- **Supabase GitHub registry access:**
-  1. Generate a GitHub classic token with the `read:packages` scope and store it as `GITHUB_TOKEN` in both your local shell and the Vercel project settings (all environments).
-  2. The `.npmrc` in this repo already scopes `@supabase` packages to `https://npm.pkg.github.com` and reads the token automatically via `//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}`. Without this variable, installs will fail with `403 Forbidden`.
-  3. After exporting the token locally (for example `export GITHUB_TOKEN=ghp_xxx`), rerun `npm install --legacy-peer-deps` to download `@supabase/ssr` successfully.
+- **Supabase auth helpers:** The project now uses `@supabase/auth-helpers-nextjs`, which is published on the public npm registry. No GitHub token is required. Run `npm install --legacy-peer-deps` to bootstrap the workspace.
 - **Registry connectivity issues:** If the sandbox still blocks direct downloads from npm, rerun the install from an unrestricted network, commit the regenerated `package-lock.json`, and redeploy so Vercel can reuse the resolved dependency graph.
 
 

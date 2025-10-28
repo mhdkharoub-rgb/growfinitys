@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(req: NextRequest) {
   const email = new URL(req.url).searchParams.get('email');
   if (!email) return NextResponse.json({ error: 'email required' }, { status: 400 });
-  const supabase = createSupabaseServerClient();
+  const supabase = supabaseServer();
   if (!supabase) {
     return NextResponse.json({ error: 'Supabase is not configured.' }, { status: 500 });
   }

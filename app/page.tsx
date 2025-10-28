@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
-import { createBrowserClient } from "@supabase/ssr";
+import { createBrowserSupabaseClient } from "@supabase/auth-helpers-nextjs";
 import { useRouter } from "next/navigation";
 
 export default function Home() {
@@ -20,7 +20,10 @@ export default function Home() {
       return null;
     }
 
-    return createBrowserClient(supabaseUrl, supabaseAnonKey);
+    return createBrowserSupabaseClient({
+      supabaseUrl,
+      supabaseKey: supabaseAnonKey,
+    });
   }, [supabaseUrl, supabaseAnonKey]);
 
   async function handleLogin() {

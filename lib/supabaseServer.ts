@@ -1,35 +1,27 @@
 import { cookies } from "next/headers";
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 
-/**
- * Creates a Supabase client configured for server-side usage.
- */
-export function createSupabaseServerClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+let warnedMissingConfig = false;
 
-  if (!url || !anonKey) {
-    console.warn("Supabase environment variables are not configured.");
+export function supabaseServer() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    if (!warnedMissingConfig) {
+      console.warn(
+        "Supabase environment variables are not configured. Server helpers will return null until NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set."
+      );
+      warnedMissingConfig = true;
+    }
     return null;
   }
 
-  const cookieStore = cookies();
-
-  return createServerClient(url, anonKey, {
-    cookies: {
-      get(name: string) {
-        return cookieStore.get(name)?.value;
-      },
-      set(name: string, value: string, options: CookieOptions) {
-        try {
-          cookieStore.set({ name, value, ...options });
-        } catch {}
-      },
-      remove(name: string, options: CookieOptions) {
-        try {
-          cookieStore.set({ name, value: "", ...options, maxAge: 0 });
-        } catch {}
-      },
-    },
-  });
+  return createServerComponentClient(
+    { cookies },
+    {
+      supabaseUrl,
+      supabaseKey: supabaseAnonKey,
+    }
+  );
 }
