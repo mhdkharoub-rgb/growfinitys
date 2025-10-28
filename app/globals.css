@@ -2,13 +2,54 @@
 @tailwind components;
 @tailwind utilities;
 
-body { @apply bg-black text-white font-sans; }
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: #000;
+  color: #fff;
+  font-family: "Poppins", sans-serif;
+  overflow-x: hidden;
+}
 
 @keyframes goldPulse {
-  0%, 100% { opacity: 0.6; filter: drop-shadow(0 0 10px #d4af37); }
-  50% { opacity: 1; filter: drop-shadow(0 0 25px #d4af37); }
+  0%, 100% {
+    opacity: 0.6;
+    filter: drop-shadow(0 0 10px #d4af37);
+  }
+  50% {
+    opacity: 1;
+    filter: drop-shadow(0 0 25px #d4af37);
+  }
 }
 
 .glow-text {
   animation: goldPulse 3s ease-in-out infinite;
+}
+
+.gold-text {
+  color: #d4af37;
+}
+
+.btn-gold {
+  background: linear-gradient(90deg, #b89728, #d4af37);
+  color: #000;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 9999px;
+  transition: all 0.3s ease;
+}
+
+.btn-gold:hover {
+  box-shadow: 0 0 12px #d4af37;
+  transform: scale(1.05);
+}
+
+.section {
+  padding: 5rem 1rem;
+}
+
+.glow {
+  text-shadow: 0 0 10px rgba(212, 175, 55, 0.8);
 }
