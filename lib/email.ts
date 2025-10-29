@@ -9,17 +9,33 @@ export async function sendEmail({ to, subject, html }: SendOpts) {
     console.warn("[email] RESEND_API_KEY missing, skipping send");
     return { skipped: true };
   }
-  const body = { from: EMAIL_FROM, to, subject, html };
+
+  const recipients: string | string[] = Array.isArray(to) ? to.filter(Boolean) : to;
+  if (Array.isArray(recipients) && recipients.length === 0) {
+    console.warn("[email] No recipients provided, skipping send");
+    return { skipped: true };
+  }
+  if (typeof recipients === "string" && !recipients.trim()) {
+    console.warn("[email] Empty recipient, skipping send");
+    return { skipped: true };
+  }
+
+  const body = { from: EMAIL_FROM, to: recipients, subject, html };
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_API_KEY}` },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${RESEND_API_KEY}`,
+    },
     body: JSON.stringify(body),
   });
+
   if (!res.ok) {
     const text = await res.text();
     console.error("[email] Resend error:", text);
     throw new Error("Email send failed");
   }
+
   return res.json();
 }
 

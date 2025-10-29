@@ -1,16 +1,21 @@
-import { requireAdmin } from '@/lib/auth';
-import AdminPanel from '@/components/AdminPanel';
-
-export const dynamic = 'force-dynamic';
+import { redirect } from "next/navigation";
+import { AdminPanel } from "./AdminPanel";
+import { supabaseServer } from "@/lib/supabaseServer";
 
 export default async function AdminPage() {
-  const user = await requireAdmin();
-  if (!user) return <div>Not authorized.</div>;
+  const supabase = supabaseServer();
 
-  return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Admin Panel</h1>
-      <AdminPanel />
-    </div>
-  );
+  if (!supabase) {
+    redirect("/login");
+  }
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session) {
+    redirect("/login");
+  }
+
+  return <AdminPanel />;
 }

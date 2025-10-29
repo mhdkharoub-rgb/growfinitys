@@ -1,4 +1,4 @@
--- members table (email-keyed). You can also link to auth.users later.
+-- members table (email-keyed)
 create table if not exists members (
   id uuid primary key default gen_random_uuid(),
   email text unique not null,
@@ -57,7 +57,6 @@ language sql stable as $$
   where s.status = 'active'
     and s.ends_at > now()
     and (
-      -- VIP receives all; Pro receives Pro+Basic; Basic receives Basic
       (p_audience = 'basic' and s.plan in ('basic','pro','vip')) or
       (p_audience = 'pro' and s.plan in ('pro','vip')) or
       (p_audience = 'vip' and s.plan = 'vip')

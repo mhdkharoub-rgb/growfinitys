@@ -10,7 +10,6 @@ export function planFromZeroLink(url: string): Plan | null {
 }
 
 export function secondsForPlan(plan: Plan, yearly = false) {
-  // 30d vs 365d; adjust if you want proration later
   const days = yearly ? 365 : 30;
   return days * 24 * 60 * 60;
 }

@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { planFromZeroLink, secondsForPlan } from "@/lib/plans";
 
-// Optional shared secret to verify webhook source
 const NASECRET = process.env.NASIO_WEBHOOK_SECRET;
 
 export async function POST(req: NextRequest) {
@@ -10,15 +9,17 @@ export async function POST(req: NextRequest) {
     if (NASECRET) {
       const sig = req.headers.get("x-nasio-signature");
       if (sig !== NASECRET) {
-        return NextResponse.json({ ok: false, error: "invalid signature" }, { status: 401 });
+        return NextResponse.json(
+          { ok: false, error: "invalid signature" },
+          { status: 401 }
+        );
       }
     }
 
     const payload = await req.json();
-    // Expected minimal payload: { email, zero_link, payment_status, period: "monthly"|"yearly", paid_at? }
     const email: string | undefined = payload?.email;
     const zeroLink: string | undefined = payload?.zero_link;
-    const paymentStatus: string | undefined = payload?.payment_status; // "paid"
+    const paymentStatus: string | undefined = payload?.payment_status;
     const period: "monthly" | "yearly" = payload?.period === "yearly" ? "yearly" : "monthly";
 
     if (!email || !zeroLink || paymentStatus !== "paid") {
@@ -27,10 +28,12 @@ export async function POST(req: NextRequest) {
 
     const plan = planFromZeroLink(zeroLink);
     if (!plan) {
-      return NextResponse.json({ ok: false, error: "unknown plan" }, { status: 400 });
+      return NextResponse.json(
+        { ok: false, error: "unknown plan" },
+        { status: 400 }
+      );
     }
 
-    // ensure member record by email
     const { data: member, error: memberErr } = await supabaseAdmin
       .from("members")
       .upsert({ email }, { onConflict: "email" })
@@ -41,7 +44,6 @@ export async function POST(req: NextRequest) {
     const now = Math.floor(Date.now() / 1000);
     const endsAt = now + secondsForPlan(plan, period === "yearly");
 
-    // Insert or upsert active subscription
     const { error: subErr } = await supabaseAdmin
       .from("subscriptions")
       .upsert(

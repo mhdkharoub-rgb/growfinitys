@@ -8,7 +8,6 @@ export async function GET() {
   try {
     const nowIso = new Date().toISOString();
 
-    // 1) Fetch queued signals scheduled for now or earlier
     const { data: signals, error: sigErr } = await supabaseAdmin
       .from("signals")
       .select("*")
@@ -19,42 +18,48 @@ export async function GET() {
 
     let delivered = 0;
 
-    for (const s of signals ?? []) {
-      // 2) Fetch active members whose plan qualifies for this signal audience
-      const { data: subs, error: subsErr } = await supabaseAdmin
-        .rpc("active_subscribers_for_audience", { p_audience: s.audience });
+    for (const signal of signals ?? []) {
+      const { data: subs, error: subsErr } = await supabaseAdmin.rpc(
+        "active_subscribers_for_audience",
+        { p_audience: signal.audience }
+      );
       if (subsErr) throw subsErr;
 
-      // 3) Email each active member (simple channel for now)
-      //    You can optionally branch by channel (email/telegram) later.
-      const subject = `📈 ${s.title || "New Signal"} — ${s.symbol ?? s.pair ?? ""}`;
-      const tp2Html = s.tp2 ? `&nbsp;&nbsp;<b>TP2:</b> ${s.tp2}` : "";
+      const subject = `📈 ${signal.title || "New Signal"} — ${signal.symbol ?? signal.pair ?? ""}`;
       const html = `
         <div style="font-family:Inter,Arial,sans-serif;">
           <h2>Growfinitys Trading Signal</h2>
-          <p><b>Market:</b> ${s.symbol ?? s.pair ?? "N/A"}</p>
-          <p><b>Type:</b> ${s.type ?? "N/A"} &nbsp;&nbsp; <b>Risk:</b> ${s.risk ?? "—"}</p>
-          <p><b>Entry:</b> ${s.entry ?? "—"} &nbsp;&nbsp; <b>SL:</b> ${s.sl ?? "—"} &nbsp;&nbsp; <b>TP1:</b> ${s.tp1 ?? "—"} ${tp2Html}</p>
-          <p style="color:#888">Audience: ${s.audience?.toUpperCase() || "N/A"}</p>
+          <p><b>Market:</b> ${signal.symbol ?? signal.pair ?? "N/A"}</p>
+          <p><b>Type:</b> ${signal.type ?? "N/A"} &nbsp;&nbsp; <b>Risk:</b> ${signal.risk ?? "—"}</p>
+          <p><b>Entry:</b> ${signal.entry ?? "—"} &nbsp;&nbsp; <b>SL:</b> ${signal.sl ?? "—"} &nbsp;&nbsp; <b>TP1:</b> ${
+            signal.tp1 ?? "—"
+          } ${signal.tp2 ? "&nbsp;&nbsp;<b>TP2:</b> " + signal.tp2 : ""}</p>
+          <p style="color:#888">Audience: ${signal.audience?.toUpperCase() || "N/A"}</p>
         </div>`;
 
-      // Chunked sends (avoid giant payloads)
-      const emails: string[] = (subs ?? []).map((r: any) => r.email).filter(Boolean);
+      const emails: string[] = (subs ?? []).map((row: any) => row.email).filter(Boolean);
       const batchSize = 80;
       for (let i = 0; i < emails.length; i += batchSize) {
         const slice = emails.slice(i, i + batchSize);
-        await sendEmail({ to: slice, subject, html });
-        delivered += slice.length;
+        if (slice.length) {
+          await sendEmail({ to: slice, subject, html });
+          delivered += slice.length;
+        }
       }
 
-      // 4) Mark signal as sent + insert deliveries rows
       await supabaseAdmin
         .from("signals")
         .update({ status: "sent", sent_at: new Date().toISOString() })
-        .eq("id", s.id);
+        .eq("id", signal.id);
+
       if (emails.length) {
-        const ins = emails.map((e) => ({ signal_id: s.id, email: e, channel: "email", delivered_at: new Date().toISOString() }));
-        await supabaseAdmin.from("deliveries").insert(ins);
+        const rows = emails.map((email) => ({
+          signal_id: signal.id,
+          email,
+          channel: "email",
+          delivered_at: new Date().toISOString(),
+        }));
+        await supabaseAdmin.from("deliveries").insert(rows);
       }
     }
 
