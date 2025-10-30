@@ -1,69 +1,79 @@
 "use client";
-import { useState } from "react";
+import { useCallback, useState } from "react";
+
+type Tier = "vip" | "pro" | "basic";
+
+type Status = "idle" | "sending" | "success" | "error";
+
+const BUTTON_STYLES: Record<Tier, string> = {
+  vip: "border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-black",
+  pro: "border-[#C0A060] text-[#C0A060] hover:bg-[#C0A060] hover:text-black",
+  basic: "border-[#999966] text-[#999966] hover:bg-[#999966] hover:text-black",
+};
+
+const BUTTON_LABELS: Record<Tier, string> = {
+  vip: "🚀 Send VIP Alert",
+  pro: "⚡ Send Pro Alert",
+  basic: "📈 Send Basic Alert",
+};
 
 export default function AdminPage() {
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState("");
+  const [status, setStatus] = useState<Status>("idle");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleVIPAlert = async () => {
-    setLoading(true);
-    setResult("");
+  const sendAlert = useCallback(async (tier: Tier) => {
     try {
-      const res = await fetch("/api/admin/vip-alert", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          audience: "vip",
-          count: 1,
-          sendNow: true,
-        }),
-      });
+      setStatus("sending");
+      setErrorMessage(null);
 
-      const data = await res.json().catch(() => null);
-      if (!res.ok || !data?.ok) {
-        throw new Error(data?.error || "VIP alert request failed");
+      const res = await fetch(`/api/admin/${tier}-alert`, { method: "POST" });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || "Request failed");
       }
 
-      setResult(`🚀 VIP alert sent successfully! Status: ${data.status}`);
-    } catch (err: any) {
-      console.error(err);
-      setResult(`❌ Failed to send VIP alert: ${err?.message || "unknown error"}`);
-    } finally {
-      setLoading(false);
+      const data = await res.json().catch(() => ({ ok: false }));
+      if (!data?.ok) {
+        throw new Error(data?.error || "Zapier relay returned an error");
+      }
+
+      setStatus("success");
+    } catch (error: any) {
+      console.error(`[admin:${tier}]`, error);
+      setErrorMessage(error?.message || "Unknown error");
+      setStatus("error");
     }
-  };
+  }, []);
 
   return (
-    <div className="min-h-screen bg-black text-[#D4AF37] flex flex-col items-center justify-center font-poppins">
-      <h1 className="text-4xl font-bold mb-8">Growfinitys Admin Console</h1>
+    <main className="min-h-screen bg-black text-[#D4AF37] flex flex-col items-center justify-center space-y-6 px-4 py-10">
+      <h1 className="text-4xl font-bold text-center">⚡ Growfinitys Admin Panel</h1>
 
-      <div className="bg-[#111] border border-[#D4AF37] p-8 rounded-2xl shadow-lg w-full max-w-lg text-center">
-        <p className="mb-4 text-lg">
-          Manage your signals, send VIP alerts, and monitor automations.
-        </p>
+      <p className="max-w-xl text-center text-[#f4e7c2]/80">
+        Trigger instant broadcasts for each membership tier without exposing Zapier webhook URLs in the client.
+      </p>
 
-        <button
-          onClick={handleVIPAlert}
-          disabled={loading}
-          className={`mt-6 px-6 py-3 rounded-xl font-semibold border border-[#D4AF37] transition-all duration-300 ${
-            loading
-              ? "bg-gray-500 cursor-not-allowed"
-              : "bg-[#D4AF37] text-black hover:bg-black hover:text-[#D4AF37]"
-          }`}
-        >
-          {loading ? "Sending..." : "🚀 Send Instant VIP Alert"}
-        </button>
-
-        {result && (
-          <div className="mt-6 text-sm text-[#D4AF37] bg-[#000] border border-[#D4AF37] rounded-lg p-3">
-            {result}
-          </div>
-        )}
+      <div className="flex flex-col md:flex-row items-center gap-4">
+        {(Object.keys(BUTTON_STYLES) as Tier[]).map((tier) => (
+          <button
+            key={tier}
+            onClick={() => sendAlert(tier)}
+            className={`px-6 py-3 rounded-xl border-2 font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#D4AF37] focus-visible:ring-offset-black disabled:opacity-60 disabled:cursor-not-allowed ${BUTTON_STYLES[tier]}`}
+            disabled={status === "sending"}
+          >
+            {status === "sending" ? "Sending..." : BUTTON_LABELS[tier]}
+          </button>
+        ))}
       </div>
 
-      <footer className="mt-12 text-sm text-gray-500">
-        © {new Date().getFullYear()} Growfinitys. All rights reserved.
-      </footer>
-    </div>
+      {status === "sending" && <p className="text-gray-400">Sending alert...</p>}
+      {status === "success" && <p className="text-green-400">✅ Alert sent successfully!</p>}
+      {status === "error" && (
+        <div className="text-red-400 text-center">
+          <p>❌ Failed to send alert.</p>
+          {errorMessage ? <p className="text-sm text-red-300 mt-1">{errorMessage}</p> : null}
+        </div>
+      )}
+    </main>
   );
 }
