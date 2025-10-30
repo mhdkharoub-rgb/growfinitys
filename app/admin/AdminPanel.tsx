@@ -84,7 +84,9 @@ export function AdminPanel() {
   }, [loadSignals]);
 
   const handleChange = (evt: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value, type, checked } = evt.target;
+    const target = evt.target as HTMLInputElement | HTMLSelectElement;
+    const { name, value, type } = target;
+    const checked = (target as HTMLInputElement).checked;
     setForm((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,

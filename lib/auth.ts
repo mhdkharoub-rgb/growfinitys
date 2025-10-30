@@ -1,3 +1,5 @@
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
 export function requireZapierAuth(req: NextRequest): NextResponse | null {
@@ -15,4 +17,20 @@ export function requireZapierAuth(req: NextRequest): NextResponse | null {
   }
 
   return null;
+}
+
+export async function requireAdmin() {
+  const supabase = createServerComponentClient({ cookies });
+  const { data } = await supabase.auth.getUser();
+  const user = data?.user;
+
+  if (!user) {
+    throw new Error("Unauthorized: No user logged in");
+  }
+
+  if (!user.email?.endsWith("@growfinitys.com")) {
+    throw new Error("Unauthorized: Not an admin");
+  }
+
+  return user;
 }
