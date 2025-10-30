@@ -1,0 +1,22 @@
+name: Instant VIP Broadcast
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "data/signals/**"
+      - "content/signals/**"
+      - "lib/signals/**"
+  workflow_dispatch: {}
+
+jobs:
+  notify-zapier:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Instant Broadcast to Zapier
+        run: |
+          echo "🚀 Triggering VIP Broadcast via Zapier..."
+          curl -sS -X POST "https://hooks.zapier.com/hooks/catch/2534204/uissjbx/" \
+            -H "Content-Type: application/json" \
+            -d '{"type":"vip","message":"A new VIP signal was just published on Growfinitys."}'
