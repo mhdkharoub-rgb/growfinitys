@@ -7,24 +7,27 @@ export default function AdminPage() {
 
   const handleVIPAlert = async () => {
     setLoading(true);
+    setResult("");
     try {
-      const res = await fetch(
-        "https://hooks.zapier.com/hooks/catch/2534204/uissjbx/", // ✅ your actual Zapier webhook URL
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            audience: "vip",
-            count: 1,
-            sendNow: true,
-          }),
-        }
-      );
-      const text = await res.text();
-      setResult("🚀 VIP alert sent successfully! Response: " + text);
-    } catch (err) {
+      const res = await fetch("/api/admin/vip-alert", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          audience: "vip",
+          count: 1,
+          sendNow: true,
+        }),
+      });
+
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.ok) {
+        throw new Error(data?.error || "VIP alert request failed");
+      }
+
+      setResult(`🚀 VIP alert sent successfully! Status: ${data.status}`);
+    } catch (err: any) {
       console.error(err);
-      setResult("❌ Failed to send VIP alert. Check console for details.");
+      setResult(`❌ Failed to send VIP alert: ${err?.message || "unknown error"}`);
     } finally {
       setLoading(false);
     }
