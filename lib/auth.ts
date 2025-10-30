@@ -1,40 +1,36 @@
-import { supabaseServer } from './supabaseServer';
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { cookies } from "next/headers";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function getSession() {
-  const supabase = supabaseServer();
-  if (!supabase) return null;
+export function requireZapierAuth(req: NextRequest): NextResponse | null {
+  const secret = process.env.ZAPIER_SECRET;
+  if (!secret) {
+    console.warn("[auth] ZAPIER_SECRET not set; allowing request (dev)");
+    return null;
+  }
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  return session ?? null;
-}
+  const header = req.headers.get("authorization");
+  const token = header?.startsWith("Bearer ") ? header.slice(7) : req.nextUrl.searchParams.get("auth");
 
-export async function requireAdmin() {
-  const supabase = supabaseServer();
-  if (!supabase) return null;
+  if (token !== secret) {
+    return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
+  }
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
-
-  const { data } = await supabase.from('profiles').select('role,email').eq('id', user.id).single();
-  if (data?.role === 'admin' || data?.email === process.env.ADMIN_EMAIL) return user;
   return null;
 }
 
-export async function getActiveSubscription(userId: string) {
-  const supabase = supabaseServer();
-  if (!supabase) return null;
+export async function requireAdmin() {
+  const supabase = createServerComponentClient({ cookies });
+  const { data } = await supabase.auth.getUser();
+  const user = data?.user;
 
-  const { data } = await supabase
-    .from('subscriptions')
-    .select('*')
-    .eq('user_id', userId)
-    .eq('status', 'active')
-    .gt('expires_at', new Date().toISOString())
-    .maybeSingle();
+  if (!user) {
+    throw new Error("Unauthorized: No user logged in");
+  }
 
-  return data ?? null;
+  if (!user.email?.endsWith("@growfinitys.com")) {
+    throw new Error("Unauthorized: Not an admin");
+  }
+
+  return user;
 }
