@@ -1,36 +1,44 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
-export async function GET(req: Request) {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+function getClient(): SupabaseClient | null {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) {
+    console.warn("[cron/daily] Missing Supabase configuration");
+    return null;
+  }
+  return createClient(url, key, { auth: { persistSession: false } });
+}
+
+export async function GET() {
+  const supabase = getClient();
+  if (!supabase) {
+    return NextResponse.json({ success: false, error: "Supabase not configured" }, { status: 500 });
+  }
 
   try {
     const nowIso = new Date().toISOString();
 
-    // Select expiring subscriptions
     const { data: expiring, error: expErr } = await supabase
       .from("subscriptions")
-      .select("*", { count: "exact" }) // ✅ fixed (single-argument form)
+      .select("*")
       .lt("ends_at", nowIso)
       .neq("status", "expired");
 
     if (expErr) throw expErr;
 
-    // Example summaries (extend as needed)
     const [active, queued, sent] = await Promise.all([
-      supabase.from("signals").select("*").eq("status", "active"),
-      supabase.from("signals").select("*").eq("status", "queued"),
-      supabase.from("signals").select("*").eq("status", "sent"),
+      supabase.from("subscriptions").select("id", { count: "exact" }).eq("status", "active"),
+      supabase.from("signals").select("id", { count: "exact" }).eq("status", "queued"),
+      supabase.from("signals").select("id", { count: "exact" }).eq("status", "sent"),
     ]);
 
     const summary = {
       expiredCount: expiring?.length ?? 0,
-      active: active.data?.length ?? 0,
-      queued: queued.data?.length ?? 0,
-      sent: sent.data?.length ?? 0,
+      active: active.count ?? 0,
+      queued: queued.count ?? 0,
+      sent: sent.count ?? 0,
       timestamp: nowIso,
     };
 

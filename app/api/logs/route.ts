@@ -1,13 +1,23 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+function getClient(): SupabaseClient | null {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) {
+    console.warn("[logs] Missing Supabase credentials");
+    return null;
+  }
+  return createClient(url, key, { auth: { persistSession: false } });
+}
 
 export async function POST(req: Request) {
   try {
+    const supabase = getClient();
+    if (!supabase) {
+      return NextResponse.json({ success: false, error: "Supabase not configured" }, { status: 500 });
+    }
+
     const { event, details } = await req.json();
     const { error } = await supabase
       .from("automation_logs")
@@ -22,6 +32,11 @@ export async function POST(req: Request) {
 
 export async function GET() {
   try {
+    const supabase = getClient();
+    if (!supabase) {
+      return NextResponse.json({ logs: [], error: "Supabase not configured" }, { status: 500 });
+    }
+
     const { data, error } = await supabase
       .from("automation_logs")
       .select("*")

@@ -1,4 +1,4 @@
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createRouteHandlerClient, createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -19,11 +19,17 @@ export function requireZapierAuth(req: NextRequest): NextResponse | null {
   return null;
 }
 
-export async function requireAdmin() {
-  const supabase = createServerComponentClient({ cookies });
-  const { data } = await supabase.auth.getUser();
-  const user = data?.user;
+export async function requireAdmin(req?: NextRequest) {
+  const supabase = req
+    ? createRouteHandlerClient({ cookies })
+    : createServerComponentClient({ cookies });
 
+  const { data, error } = await supabase.auth.getUser();
+  if (error) {
+    throw error;
+  }
+
+  const user = data?.user;
   if (!user) {
     throw new Error("Unauthorized: No user logged in");
   }
