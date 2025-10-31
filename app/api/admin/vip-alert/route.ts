@@ -1,72 +1,59 @@
-import { supabaseServer } from "@/lib/supabaseServer";
+import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 
 export async function POST(req: Request) {
+  const supabase = createServerComponentClient({ cookies });
+  const {
+    data: { user },
+    error: userErr,
+  } = await supabase.auth.getUser();
+
+  if (userErr || !user) {
+    console.error("❌ No Supabase user found", userErr);
+    return NextResponse.json({ error: "Unauthorized - no user" }, { status: 401 });
+  }
+
+  // Check if user is admin or trusted email
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role, email")
+    .eq("id", user.id)
+    .single();
+
+  const email = user.email || profile?.email || "";
+  const role = profile?.role || "";
+
+  // ✅ Flexible check: allows admin role OR trusted email
+  const isAdmin =
+    role === "admin" ||
+    email === "mhdkharoub.rgb@gmail.com" ||
+    email === "mhdkharoub123@gmail.com";
+
+  if (!isAdmin) {
+    console.error("Unauthorized - role/email mismatch", { role, email });
+    return NextResponse.json({ error: "Unauthorized - role/email mismatch" }, { status: 401 });
+  }
+
+  // Send to Zapier (using env variable)
+  const webhookUrl = process.env.ZAPIER_VIP_WEBHOOK_URL;
+  if (!webhookUrl) {
+    return NextResponse.json({ error: "Missing Zapier webhook URL" }, { status: 500 });
+  }
+
   try {
-    const supabase = supabaseServer();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    // Debug logging for Vercel logs
-    console.log("🔐 Supabase getUser result:", user);
-    if (authError) console.error("Auth error:", authError);
-
-    if (!user) {
-      return new Response(JSON.stringify({ error: "Unauthorized - no user found" }), {
-        status: 401,
-      });
-    }
-
-    // Fetch profile role from DB
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
-    console.log("👤 Profile result:", profile);
-    if (profileError) console.error("Profile query error:", profileError);
-
-    // ✅ TEMPORARY email-based fallback for Mohammad
-    const adminEmail = "mhdkharoub.rgb@gmail.com"; // ⬅️ Replace with your exact login email
-
-    if (profile?.role !== "admin" && user.email !== adminEmail) {
-      return new Response(JSON.stringify({ error: "Unauthorized - role/email mismatch" }), {
-        status: 403,
-      });
-    }
-
-    // --- Main alert logic ---
-    const payload = await req.json();
-
-    console.log("🚀 Incoming payload:", payload);
-
-    // Send to Zapier webhook securely using env var
-    const webhookUrl = process.env.ZAPIER_VIP_WEBHOOK_URL;
-    if (!webhookUrl) {
-      return new Response(JSON.stringify({ error: "Webhook URL not configured" }), { status: 500 });
-    }
-
-    const zapResp = await fetch(webhookUrl, {
+    const res = await fetch(webhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ audience: "vip", count: 12 }),
     });
 
-    if (!zapResp.ok) {
-      const errorText = await zapResp.text();
-      console.error("Zapier webhook failed:", errorText);
-      return new Response(JSON.stringify({ error: "Zapier webhook failed", details: errorText }), {
-        status: 500,
-      });
-    }
+    const text = await res.text();
+    console.log("✅ VIP alert sent:", text);
 
-    return new Response(JSON.stringify({ success: true }), { status: 200 });
-  } catch (err) {
-    console.error("Unexpected error in /api/admin/vip-alert:", err);
-    return new Response(JSON.stringify({ error: "Internal Server Error", details: String(err) }), {
-      status: 500,
-    });
+    return NextResponse.json({ success: true, result: text });
+  } catch (err: any) {
+    console.error("❌ Failed to send alert:", err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
