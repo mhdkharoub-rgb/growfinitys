@@ -21,7 +21,7 @@ export default function LoginPage() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function redirectByRole(userId: string) {
-    // retry up to 3 times while waiting for the profile row to exist
+    // retry up to 3 times while waiting for profile
     for (let i = 0; i < 3; i++) {
       const { data: profile } = await supabase
         .from("profiles")
@@ -39,18 +39,18 @@ export default function LoginPage() {
       }
     });
 
-      // wait 1 second before retry
+      // wait 1 s before retry
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
 
-    // fallback
+    // fallback redirect
     router.replace("/dashboard");
   }
 
   const handleLogin = async () => {
     setLoading(true);
     const { error } = await supabase.auth.signInWithOtp({
-      email: "mhdkharoub@gmail.com", // main admin
+      email: "mhdkharoub@gmail.com", // admin email
     });
     alert(error ? "❌ " + error.message : "✅ Magic link sent to your email.");
     setLoading(false);
@@ -65,7 +65,7 @@ export default function LoginPage() {
           disabled={loading}
           className="bg-gold text-black px-6 py-3 rounded font-semibold hover:bg-yellow-400 transition disabled:opacity-50"
         >
-          {loading ? "Sending..." : "✉️ Send Magic Link"}
+          {loading ? "Sending…" : "✉️ Send Magic Link"}
         </button>
       </div>
     </div>
