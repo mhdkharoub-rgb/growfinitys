@@ -12,16 +12,16 @@ export default function LoginPage() {
   useEffect(() => {
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
-        await redirectByRole(session.user.id);
+        redirectByRole(session.user.id);
       }
     });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, []); // run once
+  }, []); // run once on mount
 
   async function redirectByRole(userId: string) {
     // Try up to 3 times waiting for profile
