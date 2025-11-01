@@ -17,11 +17,14 @@ export default function LoginPage() {
         await redirectByRole(session.user.id);
       }
     });
-    return () => subscription.unsubscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []); // run once
 
   async function redirectByRole(userId: string) {
-    // Try up to 3 times waiting for profile creation
+    // Try up to 3 times waiting for profile
     for (let i = 0; i < 3; i++) {
       const { data: profile } = await supabase
         .from("profiles")
@@ -39,31 +42,31 @@ export default function LoginPage() {
       }
     });
 
-      // Wait 1 second before retrying
+      // wait 1 second before retrying
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
 
-    // Fallback redirect
+    // fallback redirect
     router.replace("/dashboard");
   }
 
   const handleLogin = async () => {
     setLoading(true);
     const { error } = await supabase.auth.signInWithOtp({
-      email: "mhdkharoub@gmail.com", // main admin
+      email: "mhdkharoub@gmail.com", // your admin email
     });
-    alert(error ? "❌ " + error.message : "✅ Magic link sent to your email.");
+    alert(error ? `❌ ${error.message}` : "✅ Magic link sent to your email.");
     setLoading(false);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black text-gold">
+    <div className="min-h-screen flex items-center justify-center bg-black text-[#d4af37]">
       <div className="text-center">
         <h1 className="text-3xl font-bold mb-6">Login to Growfinitys</h1>
         <button
           onClick={handleLogin}
           disabled={loading}
-          className="bg-gold text-black px-6 py-3 rounded font-semibold hover:bg-yellow-400 transition disabled:opacity-50"
+          className="bg-[#d4af37] text-black px-6 py-3 rounded font-semibold hover:bg-yellow-400 transition disabled:opacity-50"
         >
           {loading ? "Sending…" : "✉️ Send Magic Link"}
         </button>
