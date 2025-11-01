@@ -18,10 +18,10 @@ export default function LoginPage() {
       }
     });
     return () => subscription.unsubscribe();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); // run once
 
   async function redirectByRole(userId: string) {
-    // retry up to 3 times while waiting for profile
+    // Try up to 3 times waiting for profile creation
     for (let i = 0; i < 3; i++) {
       const { data: profile } = await supabase
         .from("profiles")
@@ -39,18 +39,18 @@ export default function LoginPage() {
       }
     });
 
-      // wait 1 s before retry
+      // Wait 1 second before retrying
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
 
-    // fallback redirect
+    // Fallback redirect
     router.replace("/dashboard");
   }
 
   const handleLogin = async () => {
     setLoading(true);
     const { error } = await supabase.auth.signInWithOtp({
-      email: "mhdkharoub@gmail.com", // admin email
+      email: "mhdkharoub@gmail.com", // main admin
     });
     alert(error ? "❌ " + error.message : "✅ Magic link sent to your email.");
     setLoading(false);
