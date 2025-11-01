@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useRouter } from "next/navigation";
+import LogoutBar from "@/components/LogoutBar";
 
 export default function AdminPage() {
   const supabase = createClientComponentClient();
@@ -56,13 +57,15 @@ export default function AdminPage() {
   if (!isAdmin) return null;
 
   return (
-    <div className="min-h-screen bg-black text-gold p-10">
-      <h1 className="text-4xl font-bold text-center mb-8">Admin Dashboard</h1>
+    <div className="min-h-screen bg-black text-gold p-10 relative">
+      <LogoutBar />
+      <h1 className="text-4xl font-bold mb-8 text-center">Admin Dashboard</h1>
+      <p className="text-center mb-6">👑 Welcome Admin! Manage signals below.</p>
 
       <div className="max-w-3xl mx-auto space-y-6">
         <p className="text-center">
-          👋 Welcome, <strong>Admin</strong>! You have full access to send VIP alerts and manage AI
-          trading signals.
+          👋 Welcome, <strong>Admin</strong>! You have full access to send VIP alerts and manage AI trading
+          signals.
         </p>
 
         <button
@@ -81,16 +84,6 @@ export default function AdminPage() {
           className="block w-full bg-gold text-black font-semibold py-3 rounded hover:bg-yellow-400 transition"
         >
           🚀 Send VIP Signal Alert
-        </button>
-
-        <button
-          onClick={async () => {
-            await supabase.auth.signOut();
-            router.replace("/login");
-          }}
-          className="block w-full border border-gold text-gold py-3 rounded hover:bg-gold hover:text-black transition"
-        >
-          🔒 Log Out
         </button>
       </div>
     </div>

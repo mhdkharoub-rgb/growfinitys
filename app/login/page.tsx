@@ -10,41 +10,49 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Watch for auth state changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
-        // Fetch the user role from profiles
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", session.user.id)
-          .single();
+        await redirectByRole(session.user.id);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-        if (profile?.role === "admin") {
+  async function redirectByRole(userId: string) {
+    // retry up to 3 times while waiting for the profile row to exist
+    for (let i = 0; i < 3; i++) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", userId)
+        .single();
+
+      if (profile?.role) {
+        if (profile.role === "admin") {
           router.replace("/admin");
         } else {
           router.replace("/dashboard");
         }
+        return;
       }
     });
 
-    return () => subscription.unsubscribe();
-  }, [supabase, router]);
+      // wait 1 second before retry
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+
+    // fallback
+    router.replace("/dashboard");
+  }
 
   const handleLogin = async () => {
     setLoading(true);
-    const email = "mhdkharoub@gmail.com"; // Change if needed
-
-    const { error } = await supabase.auth.signInWithOtp({ email });
-
-    if (error) {
-      alert("❌ Login failed: " + error.message);
-    } else {
-      alert("✅ Magic link sent to your email.");
-    }
-
+    const { error } = await supabase.auth.signInWithOtp({
+      email: "mhdkharoub@gmail.com", // main admin
+    });
+    alert(error ? "❌ " + error.message : "✅ Magic link sent to your email.");
     setLoading(false);
   };
 
@@ -52,7 +60,6 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-black text-gold">
       <div className="text-center">
         <h1 className="text-3xl font-bold mb-6">Login to Growfinitys</h1>
-        <p className="mb-4 text-gray-400">Access your dashboard securely</p>
         <button
           onClick={handleLogin}
           disabled={loading}
