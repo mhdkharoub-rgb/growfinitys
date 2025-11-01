@@ -9,6 +9,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
+  // ✅ Watch for auth changes once
   useEffect(() => {
     const {
       data: { subscription },
@@ -21,8 +22,9 @@ export default function LoginPage() {
     return () => {
       subscription.unsubscribe();
     };
-  }, []); // run once on mount
+  }, []); // only once
 
+  // ✅ Role-based redirect
   async function redirectByRole(userId: string) {
     // Try up to 3 times waiting for profile
     for (let i = 0; i < 3; i++) {
@@ -50,6 +52,7 @@ export default function LoginPage() {
     router.replace("/dashboard");
   }
 
+  // ✅ Magic link login
   const handleLogin = async () => {
     setLoading(true);
     const { error } = await supabase.auth.signInWithOtp({
@@ -59,6 +62,7 @@ export default function LoginPage() {
     setLoading(false);
   };
 
+  // ✅ UI
   return (
     <div className="min-h-screen flex items-center justify-center bg-black text-[#d4af37]">
       <div className="text-center">
