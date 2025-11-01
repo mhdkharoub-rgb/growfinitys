@@ -44,7 +44,7 @@ export default function LoginPage() {
       }
     });
 
-      // wait 1 second before retrying
+      // wait 1s before retrying
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
 
@@ -56,7 +56,7 @@ export default function LoginPage() {
   const handleLogin = async () => {
     setLoading(true);
     const { error } = await supabase.auth.signInWithOtp({
-      email: "mhdkharoub@gmail.com", // your admin email
+      email: "mhdkharoub@gmail.com", // admin email
     });
     alert(error ? `❌ ${error.message}` : "✅ Magic link sent to your email.");
     setLoading(false);
