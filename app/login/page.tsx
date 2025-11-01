@@ -40,6 +40,7 @@ export default function LoginPage() {
         }
         return;
       }
+    });
 
       // wait 1 second before retrying
       await new Promise((resolve) => setTimeout(resolve, 1000));
