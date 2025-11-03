@@ -45,6 +45,8 @@ export default function LoginPage() {
     } catch (e) {
       console.error("Redirect error:", e);
     }
+
+    router.replace("/dashboard");
   }
 
   // ✅ Magic-link login
