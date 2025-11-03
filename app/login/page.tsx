@@ -11,16 +11,19 @@ export default function LoginPage() {
 
   // ✅ Watch for auth session
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
-        redirectByRole(session.user.id);
+        await redirectByRole(session.user.id);
       }
     });
-    return () => subscription.unsubscribe();
+
+    return () => {
+      data.subscription?.unsubscribe();
+    };
   }, []);
 
   // ✅ Redirect user by role
-  async function redirectByRole(userId: string) {
+  async function redirectByRole(userId) {
     try {
       for (let i = 0; i < 3; i++) {
         const { data: profile } = await supabase
@@ -30,20 +33,15 @@ export default function LoginPage() {
           .single();
 
         if (profile?.role) {
-          router.replace(profile.role === "admin" ? "/admin" : "/dashboard");
+          const target = profile.role === "admin" ? "/admin" : "/dashboard";
+          router.replace(target);
           return;
         }
 
-        await new Promise((resolve) => setTimeout(resolve, 1000)); // retry delay
+        // retry delay
+        await new Promise((resolve) => setTimeout(resolve, 1000));
       }
-    });
-
-    return () => {
-      if (subscription) subscription.unsubscribe();
-    };
-  }, []);
-
-      router.replace("/dashboard"); // fallback if no role found
+      router.replace("/dashboard");
     } catch (err) {
       console.error("Redirect error:", err);
     }
@@ -78,6 +76,16 @@ export default function LoginPage() {
       email: "mhdkharoub@gmail.com",
     });
 
+    alert(error ? `❌ ${error.message}` : "✅ Magic link sent to your email.");
+    setLoading(false);
+  }
+
+  // ✅ Magic Link Login
+  async function handleLogin() {
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithOtp({
+      email: "mhdkharoub@gmail.com",
+    });
     alert(error ? `❌ ${error.message}` : "✅ Magic link sent to your email.");
     setLoading(false);
   }
