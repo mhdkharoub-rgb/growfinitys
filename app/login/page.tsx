@@ -9,49 +9,55 @@ export default function LoginPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  // ✅ Watch auth changes
+  // ✅ Listen for auth change once and redirect
   useEffect(() => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        redirectByRole(session.user.id);
+      if (session && session.user) {
+        checkUserRole(session.user.id);
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      if (subscription) subscription.unsubscribe();
+    };
   }, []);
 
-  // ✅ Role-based redirect
-  async function redirectByRole(userId: string) {
-    for (let i = 0; i < 3; i++) {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", userId)
-        .single();
+  // ✅ Role-based redirect logic
+  async function checkUserRole(userId: string) {
+    try {
+      for (let i = 0; i < 3; i++) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", userId)
+          .single();
 
-      if (profile?.role) {
-        router.replace(profile.role === "admin" ? "/admin" : "/dashboard");
-        return;
+        if (profile?.role) {
+          const target = profile.role === "admin" ? "/admin" : "/dashboard";
+          router.replace(target);
+          return;
+        }
+        await new Promise((r) => setTimeout(r, 1000)); // retry delay
       }
-    });
-
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      router.replace("/dashboard"); // fallback
+    } catch (e) {
+      console.error("Redirect error:", e);
     }
 
     router.replace("/dashboard");
   }
 
-  // ✅ Magic link login
-  const handleLogin = async () => {
+  // ✅ Magic-link login
+  async function handleLogin() {
     setLoading(true);
     const { error } = await supabase.auth.signInWithOtp({
       email: "mhdkharoub@gmail.com",
     });
     alert(error ? `❌ ${error.message}` : "✅ Magic link sent to your email.");
     setLoading(false);
-  };
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-black text-[#d4af37]">
