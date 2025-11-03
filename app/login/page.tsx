@@ -9,23 +9,18 @@ export default function LoginPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  // ✅ Listen for auth change once and redirect
+  // ✅ Watch for auth session
   useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session && session.user) {
-        checkUserRole(session.user.id);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        redirectByRole(session.user.id);
       }
     });
-
-    return () => {
-      if (subscription) subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
-  // ✅ Role-based redirect logic
-  async function checkUserRole(userId: string) {
+  // ✅ Redirect user by role
+  async function redirectByRole(userId: string) {
     try {
       for (let i = 0; i < 3; i++) {
         const { data: profile } = await supabase
@@ -35,15 +30,22 @@ export default function LoginPage() {
           .single();
 
         if (profile?.role) {
-          const target = profile.role === "admin" ? "/admin" : "/dashboard";
-          router.replace(target);
+          router.replace(profile.role === "admin" ? "/admin" : "/dashboard");
           return;
         }
-        await new Promise((r) => setTimeout(r, 1000)); // retry delay
+
+        await new Promise((resolve) => setTimeout(resolve, 1000)); // retry delay
       }
-      router.replace("/dashboard"); // fallback
-    } catch (e) {
-      console.error("Redirect error:", e);
+    });
+
+    return () => {
+      if (subscription) subscription.unsubscribe();
+    };
+  }, []);
+
+      router.replace("/dashboard"); // fallback if no role found
+    } catch (err) {
+      console.error("Redirect error:", err);
     }
 
     router.replace("/dashboard");
@@ -65,6 +67,17 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithOtp({
       email: "mhdkharoub@gmail.com",
     });
+    alert(error ? `❌ ${error.message}` : "✅ Magic link sent to your email.");
+    setLoading(false);
+  }
+
+  // ✅ Magic Link Login
+  async function handleLogin() {
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithOtp({
+      email: "mhdkharoub@gmail.com",
+    });
+
     alert(error ? `❌ ${error.message}` : "✅ Magic link sent to your email.");
     setLoading(false);
   }
