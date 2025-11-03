@@ -36,11 +36,39 @@ export default function LoginPage() {
 
         await new Promise((resolve) => setTimeout(resolve, 1000)); // retry delay
       }
+    });
+
+    return () => {
+      if (subscription) subscription.unsubscribe();
+    };
+  }, []);
 
       router.replace("/dashboard"); // fallback if no role found
     } catch (err) {
       console.error("Redirect error:", err);
     }
+
+    router.replace("/dashboard");
+  }
+
+  // ✅ Magic-link login
+  async function handleLogin() {
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithOtp({
+      email: "mhdkharoub@gmail.com",
+    });
+    alert(error ? `❌ ${error.message}` : "✅ Magic link sent to your email.");
+    setLoading(false);
+  }
+
+  // ✅ Magic-link login
+  async function handleLogin() {
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithOtp({
+      email: "mhdkharoub@gmail.com",
+    });
+    alert(error ? `❌ ${error.message}` : "✅ Magic link sent to your email.");
+    setLoading(false);
   }
 
   // ✅ Magic Link Login
