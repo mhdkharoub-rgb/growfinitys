@@ -1,49 +1,74 @@
-'use client';
-import { supabaseClient } from '@/lib/supabaseClient';
-import { useState } from 'react';
+"use client";
 
-export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [msg, setMsg] = useState<string | null>(null);
+import { useEffect, useState } from "react";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { useRouter } from "next/navigation";
 
-  async function onLogin(e: React.FormEvent) {
-    e.preventDefault();
+export default function LoginPage() {
+  const supabase = createClientComponentClient();
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
-    try {
-      const supabase = supabaseClient();
-      if (!supabase) {
-        setMsg('Supabase is not configured. Please try again later.');
-        return;
+  // ✅ Watch for auth session
+  useEffect(() => {
+    const { data } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        await redirectByRole(session.user.id);
       }
+    });
 
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      setMsg(error ? error.message : 'Logged in!');
-      if (!error) window.location.href = '/dashboard';
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unexpected error logging in.';
-      setMsg(message);
+    return () => {
+      data.subscription?.unsubscribe();
+    };
+  }, []);
+
+  // ✅ Redirect user by role
+  async function redirectByRole(userId) {
+    try {
+      for (let i = 0; i < 3; i++) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", userId)
+          .single();
+
+        if (profile?.role) {
+          const target = profile.role === "admin" ? "/admin" : "/dashboard";
+          router.replace(target);
+          return;
+        }
+
+        // retry delay
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+      router.replace("/dashboard");
+    } catch (err) {
+      console.error("Redirect error:", err);
     }
   }
 
+  // ✅ Magic Link Login
+  async function handleLogin() {
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithOtp({
+      email: "mhdkharoub@gmail.com",
+    });
+    alert(error ? `❌ ${error.message}` : "✅ Magic link sent to your email.");
+    setLoading(false);
+  }
+
   return (
-    <form onSubmit={onLogin} className="max-w-md space-y-3">
-      <h1 className="text-xl font-semibold">Login</h1>
-      <input
-        className="w-full border p-2 rounded"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
-      <input
-        className="w-full border p-2 rounded"
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      <button className="px-4 py-2 border rounded">Login</button>
-      {msg && <div className="text-sm text-gray-600">{msg}</div>}
-    </form>
+    <div className="min-h-screen flex items-center justify-center bg-black text-[#d4af37]">
+      <div className="text-center">
+        <h1 className="text-3xl font-bold mb-6">Login to Growfinitys</h1>
+        <button
+          onClick={handleLogin}
+          disabled={loading}
+          className="bg-[#d4af37] text-black px-6 py-3 rounded font-semibold hover:bg-yellow-400 transition disabled:opacity-50"
+        >
+          {loading ? "Sending…" : "✉️ Send Magic Link"}
+        </button>
+      </div>
+    </div>
   );
 }
