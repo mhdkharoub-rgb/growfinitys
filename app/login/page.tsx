@@ -9,18 +9,21 @@ export default function LoginPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  // ✅ Watch for auth changes once
+  // ✅ Watch auth changes
   useEffect(() => {
-    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         redirectByRole(session.user.id);
       }
     });
-    return () => data.subscription.unsubscribe();
-  }, []); // only once
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   // ✅ Role-based redirect
-  async function redirectByRole(userId) {
+  async function redirectByRole(userId: string) {
     for (let i = 0; i < 3; i++) {
       const { data: profile } = await supabase
         .from("profiles")
@@ -34,24 +37,22 @@ export default function LoginPage() {
       }
     });
 
-      // wait 1s before retrying
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
 
-    router.replace("/dashboard"); // fallback
+    router.replace("/dashboard");
   }
 
   // ✅ Magic link login
   const handleLogin = async () => {
     setLoading(true);
     const { error } = await supabase.auth.signInWithOtp({
-      email: "mhdkharoub@gmail.com", // admin email
+      email: "mhdkharoub@gmail.com",
     });
     alert(error ? `❌ ${error.message}` : "✅ Magic link sent to your email.");
     setLoading(false);
   };
 
-  // ✅ UI
   return (
     <div className="min-h-screen flex items-center justify-center bg-black text-[#d4af37]">
       <div className="text-center">
