@@ -45,6 +45,18 @@ export default function LoginPage() {
     } catch (e) {
       console.error("Redirect error:", e);
     }
+
+    router.replace("/dashboard");
+  }
+
+  // ✅ Magic-link login
+  async function handleLogin() {
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithOtp({
+      email: "mhdkharoub@gmail.com",
+    });
+    alert(error ? `❌ ${error.message}` : "✅ Magic link sent to your email.");
+    setLoading(false);
   }
 
   // ✅ Magic-link login
