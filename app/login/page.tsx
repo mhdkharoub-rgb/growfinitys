@@ -35,6 +35,7 @@ export default function LoginPage() {
         router.replace(profile.role === "admin" ? "/admin" : "/dashboard");
         return;
       }
+    });
 
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
