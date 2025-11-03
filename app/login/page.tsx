@@ -11,22 +11,16 @@ export default function LoginPage() {
 
   // ✅ Watch for auth changes once
   useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         redirectByRole(session.user.id);
       }
     });
-
-    return () => {
-      subscription.unsubscribe();
-    };
+    return () => data.subscription.unsubscribe();
   }, []); // only once
 
   // ✅ Role-based redirect
-  async function redirectByRole(userId: string) {
-    // Try up to 3 times waiting for profile
+  async function redirectByRole(userId) {
     for (let i = 0; i < 3; i++) {
       const { data: profile } = await supabase
         .from("profiles")
@@ -35,11 +29,7 @@ export default function LoginPage() {
         .single();
 
       if (profile?.role) {
-        if (profile.role === "admin") {
-          router.replace("/admin");
-        } else {
-          router.replace("/dashboard");
-        }
+        router.replace(profile.role === "admin" ? "/admin" : "/dashboard");
         return;
       }
     });
@@ -48,8 +38,7 @@ export default function LoginPage() {
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
 
-    // fallback redirect
-    router.replace("/dashboard");
+    router.replace("/dashboard"); // fallback
   }
 
   // ✅ Magic link login
