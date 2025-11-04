@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
@@ -8,29 +8,33 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  // ✅ Unified redirect function
-  const redirectByRole = async (userId: string) => {
+  // ✅ Redirect user by role with email override for Mohammad
+  const redirectByRole = async (userId: string, email?: string) => {
     try {
       for (let i = 0; i < 3; i++) {
         const { data: profile } = await supabase
           .from("profiles")
-          .select("role")
+          .select("role,email")
           .eq("id", userId)
           .single();
 
-        if (profile?.role) {
-          router.replace(profile.role === "admin" ? "/admin" : "/dashboard");
+        const role =
+          profile?.role ||
+          (email === "mhdkharoub@gmail.com" ? "admin" : "member");
+
+        if (role) {
+          router.replace(role === "admin" ? "/admin" : "/dashboard");
           return;
         }
 
-        await new Promise((resolve) => setTimeout(resolve, 1000)); // retry delay
+        await new Promise((resolve) => setTimeout(resolve, 1000));
       }
     } catch (error) {
       console.error("Redirect error:", error);
     }
   };
 
-  // ✅ Magic link login (single version only)
+  // ✅ Magic link login
   const handleLogin = async () => {
     try {
       setLoading(true);
@@ -45,12 +49,12 @@ export default function LoginPage() {
     }
   };
 
-  // ✅ Supabase auth listener
+  // ✅ Auth listener
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (event === "SIGNED_IN" && session?.user) {
-          await redirectByRole(session.user.id);
+          await redirectByRole(session.user.id, session.user.email);
         }
       }
     );
