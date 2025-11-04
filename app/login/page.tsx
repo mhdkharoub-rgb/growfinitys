@@ -1,49 +1,77 @@
-'use client';
-import { supabaseClient } from '@/lib/supabaseClient';
-import { useState } from 'react';
+"use client";
 
-export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [msg, setMsg] = useState<string | null>(null);
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
 
-  async function onLogin(e: React.FormEvent) {
-    e.preventDefault();
+export default function LoginPage() {
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
+  // ✅ Centralized redirect with hardcoded admin fallback
+  const redirectByRole = async (userId: string, email?: string) => {
     try {
-      const supabase = supabaseClient();
-      if (!supabase) {
-        setMsg('Supabase is not configured. Please try again later.');
+      // Always prioritize Mohammad's admin access
+      if (email === "mhdkharoub@gmail.com") {
+        router.replace("/admin");
         return;
       }
 
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      setMsg(error ? error.message : 'Logged in!');
-      if (!error) window.location.href = '/dashboard';
+      // Otherwise, look up role from profiles
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", userId)
+        .single();
+
+      const role = profile?.role ?? "member";
+      router.replace(role === "admin" ? "/admin" : "/dashboard");
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unexpected error logging in.';
-      setMsg(message);
+      console.error("Redirect error:", error);
+      router.replace("/dashboard");
     }
-  }
+  };
+
+  // ✅ Magic Link login
+  const handleLogin = async () => {
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.signInWithOtp({
+        email: "mhdkharoub@gmail.com",
+      });
+
+      if (error) alert(`❌ ${error.message}`);
+      else alert("✅ Magic link sent to your email!");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ Auth listener
+  useEffect(() => {
+    const { data } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === "SIGNED_IN" && session?.user) {
+          await redirectByRole(session.user.id, session.user.email);
+        }
+      }
+    );
+
+    // Supabase v2 cleanup
+    return () => {
+      data?.subscription?.unsubscribe();
+    };
+  }, []);
 
   return (
-    <form onSubmit={onLogin} className="max-w-md space-y-3">
-      <h1 className="text-xl font-semibold">Login</h1>
-      <input
-        className="w-full border p-2 rounded"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
-      <input
-        className="w-full border p-2 rounded"
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      <button className="px-4 py-2 border rounded">Login</button>
-      {msg && <div className="text-sm text-gray-600">{msg}</div>}
-    </form>
+    <div className="flex items-center justify-center min-h-screen">
+      <button
+        onClick={handleLogin}
+        disabled={loading}
+        className="px-4 py-2 bg-blue-600 text-white rounded-lg"
+      >
+        {loading ? "Sending link..." : "Login with Magic Link"}
+      </button>
+    </div>
   );
 }
