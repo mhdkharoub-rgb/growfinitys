@@ -1,51 +1,15 @@
 "use client";
-import { useMemo } from "react";
-import { createBrowserSupabaseClient } from "@supabase/auth-helpers-nextjs";
-import { useRouter } from "next/navigation";
 
-export default function Dashboard() {
-  const router = useRouter();
-  const supabase = useMemo(() => {
-    if (typeof window === "undefined") {
-      return null;
-    }
+import TopBar from "@/components/TopBar";
 
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-    if (!url || !anonKey) {
-      console.warn("Supabase environment variables are not configured.");
-      return null;
-    }
-
-    return createBrowserSupabaseClient({ supabaseUrl: url, supabaseKey: anonKey });
-  }, []);
-
-  async function handleLogout() {
-    if (!supabase) {
-      router.push("/");
-      return;
-    }
-
-    await supabase.auth.signOut();
-    router.push("/");
-  }
-
+export default function DashboardPage() {
   return (
-    <main className="min-h-screen bg-black text-white flex flex-col items-center justify-center text-center px-6">
-      <h1 className="text-5xl font-bold text-gold mb-6">Welcome to Growfinitys VIP Dashboard</h1>
-      <p className="text-gray-400 mb-10">You’re logged in. Exclusive signals coming soon!</p>
-      <button
-        onClick={handleLogout}
-        className="bg-gold text-black font-semibold px-8 py-3 rounded-xl hover:bg-goldDark transition"
-      >
-        Logout
-      </button>
-      {!supabase && (
-        <p className="mt-6 text-sm text-gray-500">
-          Supabase is not configured. Please add your project credentials.
-        </p>
-      )}
-    </main>
+    <div className="min-h-screen bg-black text-[#d4af37]">
+      <TopBar />
+      <div className="p-8 text-center">
+        <h2 className="text-3xl font-bold mb-4">Welcome to Growfinitys VIP Dashboard</h2>
+        <p>Exclusive AI signals and automation tools will appear here soon.</p>
+      </div>
+    </div>
   );
 }
