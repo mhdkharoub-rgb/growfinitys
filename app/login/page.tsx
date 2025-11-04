@@ -1,29 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function LoginPage() {
-  const supabase = createClientComponentClient();
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
-  // ✅ Watch for auth session
-  useEffect(() => {
-    const { data } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (session?.user) {
-        await redirectByRole(session.user.id);
-      }
-    });
-
-    return () => {
-      data.subscription?.unsubscribe();
-    };
-  }, []);
-
-  // ✅ Redirect user by role (type-safe)
-  async function redirectByRole(userId: string): Promise<void> {
+  // ✅ Unified redirect function
+  const redirectByRole = async (userId: string) => {
     try {
       for (let i = 0; i < 3; i++) {
         const { data: profile } = await supabase
@@ -33,98 +19,55 @@ export default function LoginPage() {
           .single();
 
         if (profile?.role) {
-          const target = profile.role === "admin" ? "/admin" : "/dashboard";
-          router.replace(target);
+          router.replace(profile.role === "admin" ? "/admin" : "/dashboard");
           return;
         }
 
-        // retry delay
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000)); // retry delay
       }
-      router.replace("/dashboard");
-    } catch (err) {
-      console.error("Redirect error:", err);
+    } catch (error) {
+      console.error("Redirect error:", error);
     }
-  }
+  };
 
-  // ✅ Magic Link Login
-  async function handleLogin() {
+  // ✅ Magic link login (single version only)
+  const handleLogin = async () => {
     try {
       setLoading(true);
       const { error } = await supabase.auth.signInWithOtp({
         email: "mhdkharoub@gmail.com",
       });
-      alert(error ? `❌ ${error.message}` : "✅ Magic link sent to your email.");
+
+      if (error) alert(`❌ ${error.message}`);
+      else alert("✅ Magic link sent to your email!");
     } finally {
       setLoading(false);
     }
+  };
 
-    router.replace("/dashboard");
-  }
-
-  // ✅ Magic-link login
-  async function handleLogin() {
-    setLoading(true);
-    const { error } = await supabase.auth.signInWithOtp({
-      email: "mhdkharoub@gmail.com",
-    });
-    alert(error ? `❌ ${error.message}` : "✅ Magic link sent to your email.");
-    setLoading(false);
-  }
-
-  // ✅ Magic-link login
-  async function handleLogin() {
-    setLoading(true);
-    const { error } = await supabase.auth.signInWithOtp({
-      email: "mhdkharoub@gmail.com",
-    });
-    alert(error ? `❌ ${error.message}` : "✅ Magic link sent to your email.");
-    setLoading(false);
-  }
-
-  // ✅ Magic Link Login
-  async function handleLogin() {
-    setLoading(true);
-    const { error } = await supabase.auth.signInWithOtp({
-      email: "mhdkharoub@gmail.com",
-    });
-
-    alert(error ? `❌ ${error.message}` : "✅ Magic link sent to your email.");
-    setLoading(false);
-  }
-
-  // ✅ Magic Link Login
-  async function handleLogin() {
-    setLoading(true);
-    const { error } = await supabase.auth.signInWithOtp({
-      email: "mhdkharoub@gmail.com",
-    });
-    alert(error ? `❌ ${error.message}` : "✅ Magic link sent to your email.");
-    setLoading(false);
-  }
-
-  // ✅ Magic Link Login
-  async function handleLogin() {
-    setLoading(true);
-    const { error } = await supabase.auth.signInWithOtp({
-      email: "mhdkharoub@gmail.com",
-    });
-    alert(error ? `❌ ${error.message}` : "✅ Magic link sent to your email.");
-    setLoading(false);
-  }
+  // ✅ Supabase auth listener
+  useEffect(() => {
+    const { data: subscription } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === "SIGNED_IN" && session?.user) {
+          await redirectByRole(session.user.id);
+        }
+      }
+    );
+    return () => {
+      subscription?.unsubscribe();
+    };
+  }, []);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black text-[#d4af37]">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold mb-6">Login to Growfinitys</h1>
-        <button
-          onClick={handleLogin}
-          disabled={loading}
-          className="bg-[#d4af37] text-black px-6 py-3 rounded font-semibold hover:bg-yellow-400 transition disabled:opacity-50"
-        >
-          {loading ? "Sending…" : "✉️ Send Magic Link"}
-        </button>
-      </div>
+    <div className="flex items-center justify-center min-h-screen">
+      <button
+        onClick={handleLogin}
+        disabled={loading}
+        className="px-4 py-2 bg-blue-600 text-white rounded-lg"
+      >
+        {loading ? "Sending link..." : "Login with Magic Link"}
+      </button>
     </div>
   );
 }
