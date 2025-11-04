@@ -2,51 +2,37 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs";
 
-const ADMIN_EMAIL = "mhdkharoub@gmail.com";
-const PROTECTED_PATHS = ["/api/admin"];
-
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next();
   const supabase = createMiddlewareClient({ req, res });
 
-  // Retrieve Supabase session
   const {
     data: { session },
   } = await supabase.auth.getSession();
 
-  const pathname = req.nextUrl.pathname;
+  const url = req.nextUrl;
 
-  // Is this the admin panel or login page?
-  const isAdminPanel = pathname === "/admin" || pathname.startsWith("/admin/login");
-  const isProtected = PROTECTED_PATHS.some((path) => pathname.startsWith(path));
-
-  // ✅ Protect API routes (server endpoints)
-  if (isProtected) {
-    if (!session) {
-      const redirectUrl = req.nextUrl.clone();
-      redirectUrl.pathname = "/admin";
-      redirectUrl.searchParams.set("redirectedFrom", pathname);
-      return NextResponse.redirect(redirectUrl);
-    }
-
-    // ❌ Block if session user is not the admin
-    if (session.user.email !== ADMIN_EMAIL) {
-      return NextResponse.json(
-        { error: "Unauthorized: admin email required" },
-        { status: 403 }
-      );
-    }
+  // Not logged in → redirect to /login
+  if (!session && !url.pathname.startsWith("/login")) {
+    return NextResponse.redirect(new URL("/login", req.url));
   }
 
-  // ✅ Allow visiting /admin even if not logged in
-  // but prevent redirect loops if already logged in
-  if (isAdminPanel && session?.user.email === ADMIN_EMAIL) {
-    return NextResponse.next();
+  // Logged in
+  const email = session?.user?.email;
+
+  // ✅ Force admin redirect for Mohammad
+  if (email === "mhdkharoub@gmail.com" && url.pathname === "/dashboard") {
+    return NextResponse.redirect(new URL("/admin", req.url));
+  }
+
+  // ✅ Block others from accessing /admin
+  if (url.pathname.startsWith("/admin") && email !== "mhdkharoub@gmail.com") {
+    return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
   return res;
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/api/admin/:path*"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };
