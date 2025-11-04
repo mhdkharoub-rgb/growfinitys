@@ -8,33 +8,31 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  // ✅ Redirect user by role with email override for Mohammad
+  // ✅ Centralized redirect with hardcoded admin fallback
   const redirectByRole = async (userId: string, email?: string) => {
     try {
-      for (let i = 0; i < 3; i++) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("role,email")
-          .eq("id", userId)
-          .single();
-
-        const role =
-          profile?.role ||
-          (email === "mhdkharoub@gmail.com" ? "admin" : "member");
-
-        if (role) {
-          router.replace(role === "admin" ? "/admin" : "/dashboard");
-          return;
-        }
-
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Always prioritize Mohammad's admin access
+      if (email === "mhdkharoub@gmail.com") {
+        router.replace("/admin");
+        return;
       }
+
+      // Otherwise, look up role from profiles
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", userId)
+        .single();
+
+      const role = profile?.role ?? "member";
+      router.replace(role === "admin" ? "/admin" : "/dashboard");
     } catch (error) {
       console.error("Redirect error:", error);
+      router.replace("/dashboard");
     }
   };
 
-  // ✅ Magic link login
+  // ✅ Magic Link login
   const handleLogin = async () => {
     try {
       setLoading(true);
@@ -59,6 +57,7 @@ export default function LoginPage() {
       }
     );
 
+    // Supabase v2 cleanup
     return () => {
       data?.subscription?.unsubscribe();
     };
