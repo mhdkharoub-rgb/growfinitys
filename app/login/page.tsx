@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
@@ -8,38 +8,44 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  // ✅ Centralized redirect with hardcoded admin fallback
-  const redirectByRole = async (userId: string, email?: string) => {
-    try {
-      // Always prioritize Mohammad's admin access
-      if (email === "mhdkharoub@gmail.com") {
-        router.replace("/admin");
-        return;
-      }
+  // ✅ Universal redirect handler with hard-coded admin fallback
+  const redirectUser = async (session: any) => {
+    const email = session?.user?.email;
+    const id = session?.user?.id;
 
-      // Otherwise, look up role from profiles
+    if (!email) return;
+
+    // --- Force Mohammad's admin redirect ---
+    if (email === "mhdkharoub@gmail.com") {
+      console.log("🔐 Admin detected:", email);
+      router.replace("/admin");
+      return;
+    }
+
+    // --- Otherwise, use profiles role if available ---
+    try {
       const { data: profile } = await supabase
         .from("profiles")
         .select("role")
-        .eq("id", userId)
+        .eq("id", id)
         .single();
 
-      const role = profile?.role ?? "member";
+      const role = profile?.role || "member";
+      console.log("👤 Role from profile:", role);
       router.replace(role === "admin" ? "/admin" : "/dashboard");
-    } catch (error) {
-      console.error("Redirect error:", error);
+    } catch (err) {
+      console.error("Redirect error:", err);
       router.replace("/dashboard");
     }
   };
 
-  // ✅ Magic Link login
+  // ✅ Magic link login
   const handleLogin = async () => {
     try {
       setLoading(true);
       const { error } = await supabase.auth.signInWithOtp({
         email: "mhdkharoub@gmail.com",
       });
-
       if (error) alert(`❌ ${error.message}`);
       else alert("✅ Magic link sent to your email!");
     } finally {
@@ -47,30 +53,30 @@ export default function LoginPage() {
     }
   };
 
-  // ✅ Auth listener
+  // ✅ Listen for auth state change
   useEffect(() => {
-    const { data } = supabase.auth.onAuthStateChange(
+    const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (event === "SIGNED_IN" && session?.user) {
-          await redirectByRole(session.user.id, session.user.email);
+        if (event === "SIGNED_IN" && session) {
+          await redirectUser(session);
         }
       }
     );
 
-    // Supabase v2 cleanup
     return () => {
-      data?.subscription?.unsubscribe();
+      authListener?.subscription?.unsubscribe?.();
     };
   }, []);
 
   return (
-    <div className="flex items-center justify-center min-h-screen">
+    <div className="flex flex-col items-center justify-center min-h-screen">
+      <h1 className="text-2xl mb-4 font-semibold">Growfinitys Login</h1>
       <button
         onClick={handleLogin}
         disabled={loading}
         className="px-4 py-2 bg-blue-600 text-white rounded-lg"
       >
-        {loading ? "Sending link..." : "Login with Magic Link"}
+        {loading ? "Sending Magic Link..." : "Login as Admin"}
       </button>
     </div>
   );
