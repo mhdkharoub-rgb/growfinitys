@@ -22,8 +22,8 @@ export default function LoginPage() {
     };
   }, []);
 
-  // ✅ Redirect user by role
-  async function redirectByRole(userId) {
+  // ✅ Redirect user by role (type-safe)
+  async function redirectByRole(userId: string): Promise<void> {
     try {
       for (let i = 0; i < 3; i++) {
         const { data: profile } = await supabase
@@ -76,6 +76,16 @@ export default function LoginPage() {
       email: "mhdkharoub@gmail.com",
     });
 
+    alert(error ? `❌ ${error.message}` : "✅ Magic link sent to your email.");
+    setLoading(false);
+  }
+
+  // ✅ Magic Link Login
+  async function handleLogin() {
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithOtp({
+      email: "mhdkharoub@gmail.com",
+    });
     alert(error ? `❌ ${error.message}` : "✅ Magic link sent to your email.");
     setLoading(false);
   }
