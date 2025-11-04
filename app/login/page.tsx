@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
@@ -47,15 +47,16 @@ export default function LoginPage() {
 
   // ✅ Supabase auth listener
   useEffect(() => {
-    const { data: subscription } = supabase.auth.onAuthStateChange(
+    const { data } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (event === "SIGNED_IN" && session?.user) {
           await redirectByRole(session.user.id);
         }
       }
     );
+
     return () => {
-      subscription?.unsubscribe();
+      data?.subscription?.unsubscribe();
     };
   }, []);
 
