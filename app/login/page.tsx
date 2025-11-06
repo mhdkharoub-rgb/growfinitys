@@ -56,7 +56,36 @@ export default function LoginPage() {
     } finally {
       setLoading(false);
     }
-  }
+  };
+
+  // ✅ Magic link login
+  const handleLogin = async () => {
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.signInWithOtp({
+        email: "mhdkharoub@gmail.com",
+      });
+      if (error) alert(`❌ ${error.message}`);
+      else alert("✅ Magic link sent to your email!");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ Listen for auth state change
+  useEffect(() => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === "SIGNED_IN" && session) {
+          await redirectUser(session);
+        }
+      }
+    );
+
+    return () => {
+      authListener?.subscription?.unsubscribe?.();
+    };
+  }, []);
 
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
