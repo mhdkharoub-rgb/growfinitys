@@ -61,6 +61,64 @@ export default function LoginPage() {
     }
   };
 
+  async function handleLogin() {
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.signInWithOtp({
+        email: ADMIN_EMAIL,
+      });
+
+      if (error) {
+        alert(`❌ ${error.message}`);
+      } else {
+        alert("✅ Magic link sent to your email!");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ Magic link login
+  const handleLogin = async () => {
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.signInWithOtp({
+        email: "mhdkharoub@gmail.com",
+      });
+      if (error) alert(`❌ ${error.message}`);
+      else alert("✅ Magic link sent to your email!");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ Listen for auth state change
+  useEffect(() => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === "SIGNED_IN" && session) {
+          await redirectUser(session);
+        }
+      }
+    );
+
+    return () => {
+      authListener?.subscription?.unsubscribe?.();
+    };
+  }, []);
+
+  useEffect(() => {
+    const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "SIGNED_IN" && session?.user) {
+        await redirectByRole(session.user.id, session.user.email ?? undefined);
+      }
+    });
+
+    return () => {
+      data.subscription?.unsubscribe();
+    };
+  }, []);
+
   return (
     <main style={{ padding: "80px", textAlign: "center" }}>
       <h1>Growfinitys Login</h1>
