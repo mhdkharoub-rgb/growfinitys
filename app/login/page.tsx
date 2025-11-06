@@ -20,7 +20,24 @@ export default function LoginPage() {
         .eq("id", userId)
         .single();
 
-      if (profile?.email === ADMIN_EMAIL || profile?.role === "admin") {
+      if (!profile) {
+        router.replace("/dashboard");
+        return;
+      }
+    );
+    return () => {
+      subscription?.unsubscribe?.();
+    };
+  }, []);
+
+  // ✅ Magic Link Login
+  const handleLogin = async () => {
+    try {
+      setLoading(true);
+      const email = ADMIN_EMAIL; // Only admin login right now
+      const { error } = await supabase.auth.signInWithOtp({ email });
+
+      if (profile.email === ADMIN_EMAIL || profile.role === "admin") {
         router.replace("/admin");
       } else {
         router.replace("/dashboard");
@@ -61,64 +78,6 @@ export default function LoginPage() {
     }
   };
 
-  async function handleLogin() {
-    try {
-      setLoading(true);
-      const { error } = await supabase.auth.signInWithOtp({
-        email: ADMIN_EMAIL,
-      });
-
-      if (error) {
-        alert(`❌ ${error.message}`);
-      } else {
-        alert("✅ Magic link sent to your email!");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ✅ Magic link login
-  const handleLogin = async () => {
-    try {
-      setLoading(true);
-      const { error } = await supabase.auth.signInWithOtp({
-        email: "mhdkharoub@gmail.com",
-      });
-      if (error) alert(`❌ ${error.message}`);
-      else alert("✅ Magic link sent to your email!");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ✅ Listen for auth state change
-  useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === "SIGNED_IN" && session) {
-          await redirectUser(session);
-        }
-      }
-    );
-
-    return () => {
-      authListener?.subscription?.unsubscribe?.();
-    };
-  }, []);
-
-  useEffect(() => {
-    const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "SIGNED_IN" && session?.user) {
-        await redirectByRole(session.user.id, session.user.email ?? undefined);
-      }
-    });
-
-    return () => {
-      data.subscription?.unsubscribe();
-    };
-  }, []);
-
   return (
     <main style={{ padding: "80px", textAlign: "center" }}>
       <h1>Growfinitys Login</h1>
@@ -130,14 +89,15 @@ export default function LoginPage() {
         style={{
           marginTop: "20px",
           padding: "12px 22px",
-          background: loading ? "#999" : "black",
+          background: "black",
           color: "white",
           borderRadius: "8px",
           border: "none",
+          opacity: loading ? 0.5 : 1,
           cursor: loading ? "default" : "pointer",
         }}
       >
-        {loading ? "Sending..." : "Send Magic Login Link"}
+        {loading ? "Sending Magic Link..." : "Send Magic Login Link"}
       </button>
     </main>
   );
