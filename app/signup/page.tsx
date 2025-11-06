@@ -1,10 +1,10 @@
-'use client';
-import { supabaseClient } from '@/lib/supabaseClient';
-import { useState } from 'react';
+"use client";
+import { supabaseClient } from "@/lib/supabaseClient";
+import { useState } from "react";
 
 export default function Signup() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
 
   async function onSignup(e: React.FormEvent) {
@@ -12,16 +12,11 @@ export default function Signup() {
 
     try {
       const supabase = supabaseClient();
-      if (!supabase) {
-        setMsg('Supabase is not configured. Please try again later.');
-        return;
-      }
-
       const { error } = await supabase.auth.signUp({ email, password });
-      setMsg(error ? error.message : 'Account created! Check your email to confirm.');
-      if (!error) window.location.href = '/dashboard';
+      setMsg(error ? error.message : "Account created! Check your email to confirm.");
+      if (!error) window.location.href = "/dashboard";
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unexpected error signing up.';
+      const message = error instanceof Error ? error.message : "Unexpected error signing up.";
       setMsg(message);
     }
   }
