@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabaseClient";
 
@@ -11,64 +11,54 @@ export default function LoginPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  async function redirectByRole(userId: string, email?: string) {
-    try {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", userId)
-        .single();
+  // ✅ Redirect user based on role
+  const redirectByRole = async (userId: string) => {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", userId)
+      .single();
 
-      if (profile?.role === "admin") {
-        router.replace("/admin");
-        return;
+    if (profile?.role === "admin") {
+      router.replace("/admin");
+      return;
+    }
+
+    router.replace("/dashboard");
+  };
+
+  // ✅ Auth State Listener (correct parentheses!)
+  useEffect(() => {
+    const { data: subscription } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        if (session?.user) {
+          await redirectByRole(session.user.id);
+        }
       }
     );
+
     return () => {
       subscription?.unsubscribe?.();
     };
   }, []);
 
-  // ✅ Magic Link Login
+  // ✅ Magic link login (admin only)
   const handleLogin = async () => {
     try {
       setLoading(true);
-      const email = ADMIN_EMAIL; // Only admin login right now
-      const { error } = await supabase.auth.signInWithOtp({ email });
+      const { error } = await supabase.auth.signInWithOtp({
+        email: ADMIN_EMAIL,
+      });
 
-      if (profile.email === ADMIN_EMAIL || profile.role === "admin") {
-        router.replace("/admin");
+      if (error) {
+        alert("❌ " + error.message);
       } else {
-        router.replace("/dashboard");
+        alert("✅ Magic login link sent to your email.");
       }
-    } catch {
-      router.replace("/dashboard");
+    } finally {
+      setLoading(false);
     }
   };
-
-  // ✅ Listen for Supabase login event
-  useEffect(() => {
-    const { data: subscription } = supabase.auth.onAuthStateChange(
-      async (_, session) => {
-        if (session?.user?.id) {
-          await redirectByRole(session.user.id);
-        } else {
-          router.replace("/dashboard");
-        }
-      }
-    );
-
-      const targetEmail = email ?? (await supabase.auth.getUser()).data.user?.email;
-      if (targetEmail === ADMIN_EMAIL) {
-        router.replace("/admin");
-        return;
-      }
-    } catch (error) {
-      console.error("Role lookup failed", error);
-    }
-
-    router.replace("/dashboard");
-  }
 
   useEffect(() => {
     const {
@@ -102,31 +92,14 @@ export default function LoginPage() {
   };
 
   return (
-    <div
-      style={{
-        maxWidth: 360,
-        margin: "80px auto",
-        padding: 24,
-        textAlign: "center",
-        fontFamily: "sans-serif",
-      }}
-    >
+    <div style={{ maxWidth: 350, margin: "80px auto", textAlign: "center" }}>
       <h2>Growfinitys Admin Login</h2>
-      <p>Access your internal dashboard securely.</p>
-
       <button
         onClick={handleLogin}
         disabled={loading}
-        style={{
-          marginTop: 24,
-          padding: "12px 24px",
-          fontSize: 16,
-          cursor: loading ? "default" : "pointer",
-          borderRadius: 6,
-          border: "1px solid #111",
-        }}
+        style={{ padding: "10px 16px", marginTop: 20 }}
       >
-        {loading ? "Sending magic link..." : "Login as Admin"}
+        {loading ? "Sending..." : "Login as Admin"}
       </button>
     </div>
   );
