@@ -5,17 +5,20 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "lint": "next lint"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.45.3",
+    "@supabase/auth-helpers-nextjs": "0.10.0",
+    "@supabase/supabase-js": "2.42.0",
     "luxon": "^3.4.4",
     "next": "14.2.4",
+    "node-cron": "^3.0.3",
+    "openai": "^4.52.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "resend": "^3.5.0",
-    "zod": "^3.23.8",
-    "@supabase/auth-helpers-nextjs": "^0.10.8"
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/luxon": "^3.7.1",

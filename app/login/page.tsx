@@ -1,49 +1,99 @@
-'use client';
-import { supabaseClient } from '@/lib/supabaseClient';
-import { useState } from 'react';
+"use client";
 
-export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [msg, setMsg] = useState<string | null>(null);
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabaseClient";
 
-  async function onLogin(e: React.FormEvent) {
-    e.preventDefault();
+const ADMIN_EMAIL = "mhdkharoub@gmail.com";
+const supabase = createClient();
 
+export default function LoginPage() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+
+  async function redirectByRole(userId: string, email?: string) {
     try {
-      const supabase = supabaseClient();
-      if (!supabase) {
-        setMsg('Supabase is not configured. Please try again later.');
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", userId)
+        .single();
+
+      if (profile?.role === "admin") {
+        router.replace("/admin");
         return;
       }
 
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      setMsg(error ? error.message : 'Logged in!');
-      if (!error) window.location.href = '/dashboard';
+      const targetEmail = email ?? (await supabase.auth.getUser()).data.user?.email;
+      if (targetEmail === ADMIN_EMAIL) {
+        router.replace("/admin");
+        return;
+      }
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unexpected error logging in.';
-      setMsg(message);
+      console.error("Role lookup failed", error);
+    }
+
+    router.replace("/dashboard");
+  }
+
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(
+      async (_, session) => {
+        if (session?.user) {
+          await redirectByRole(session.user.id, session.user.email || undefined);
+        }
+      }
+    );
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  async function handleLogin() {
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.signInWithOtp({ email: ADMIN_EMAIL });
+
+      if (error) {
+        alert(`❌ ${error.message}`);
+      } else {
+        alert("✅ Magic login link has been sent to your email.");
+      }
+    } finally {
+      setLoading(false);
     }
   }
 
   return (
-    <form onSubmit={onLogin} className="max-w-md space-y-3">
-      <h1 className="text-xl font-semibold">Login</h1>
-      <input
-        className="w-full border p-2 rounded"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
-      <input
-        className="w-full border p-2 rounded"
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      <button className="px-4 py-2 border rounded">Login</button>
-      {msg && <div className="text-sm text-gray-600">{msg}</div>}
-    </form>
+    <div
+      style={{
+        maxWidth: 360,
+        margin: "80px auto",
+        padding: 24,
+        textAlign: "center",
+        fontFamily: "sans-serif",
+      }}
+    >
+      <h2>Growfinitys Admin Login</h2>
+      <p>Access your internal dashboard securely.</p>
+
+      <button
+        onClick={handleLogin}
+        disabled={loading}
+        style={{
+          marginTop: 24,
+          padding: "12px 24px",
+          fontSize: 16,
+          cursor: loading ? "default" : "pointer",
+          borderRadius: 6,
+          border: "1px solid #111",
+        }}
+      >
+        {loading ? "Sending magic link..." : "Login as Admin"}
+      </button>
+    </div>
   );
 }
