@@ -24,6 +24,18 @@ export default function LoginPage() {
         router.replace("/dashboard");
         return;
       }
+    );
+    return () => {
+      subscription?.unsubscribe?.();
+    };
+  }, []);
+
+  // ✅ Magic Link Login
+  const handleLogin = async () => {
+    try {
+      setLoading(true);
+      const email = ADMIN_EMAIL; // Only admin login right now
+      const { error } = await supabase.auth.signInWithOtp({ email });
 
       if (profile.email === ADMIN_EMAIL || profile.role === "admin") {
         router.replace("/admin");
