@@ -60,6 +60,37 @@ export default function LoginPage() {
     }
   };
 
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(
+      async (_, session) => {
+        if (session?.user) {
+          await redirectByRole(session.user.id, session.user.email || undefined);
+        }
+      }
+    );
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  async function handleLogin() {
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.signInWithOtp({ email: ADMIN_EMAIL });
+
+      if (error) {
+        alert(`❌ ${error.message}`);
+      } else {
+        alert("✅ Magic login link has been sent to your email.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div style={{ maxWidth: 350, margin: "80px auto", textAlign: "center" }}>
       <h2>Growfinitys Admin Login</h2>
