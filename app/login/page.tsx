@@ -53,9 +53,12 @@ export default function LoginPage() {
       async (_, session) => {
         if (session?.user?.id) {
           await redirectByRole(session.user.id);
+        } else {
+          router.replace("/dashboard");
         }
       }
     );
+
     return () => {
       subscription?.unsubscribe?.();
     };
