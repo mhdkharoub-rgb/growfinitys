@@ -29,4 +29,8 @@ export function supabaseClient(): SupabaseClient {
   return ensureClient();
 }
 
+export function createClient(): SupabaseClient {
+  return ensureClient();
+}
+
 export const supabase = ensureClient();

@@ -1,27 +1,26 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@/lib/supabaseClient";
 
 const ADMIN_EMAIL = "mhdkharoub@gmail.com";
+const supabase = createClient();
 
 export default function LoginPage() {
-  const supabase = createClientComponentClient();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  // ✅ Redirect based on role
-  const redirectByRole = async (userId: string) => {
+  async function redirectByRole(userId: string, email?: string) {
     try {
       const { data: profile } = await supabase
         .from("profiles")
-        .select("email, role")
+        .select("role")
         .eq("id", userId)
         .single();
 
-      if (!profile) {
-        router.replace("/dashboard");
+      if (profile?.role === "admin") {
+        router.replace("/admin");
         return;
       }
     );
@@ -59,22 +58,43 @@ export default function LoginPage() {
       }
     );
 
+      const targetEmail = email ?? (await supabase.auth.getUser()).data.user?.email;
+      if (targetEmail === ADMIN_EMAIL) {
+        router.replace("/admin");
+        return;
+      }
+    } catch (error) {
+      console.error("Role lookup failed", error);
+    }
+
+    router.replace("/dashboard");
+  }
+
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(
+      async (_, session) => {
+        if (session?.user) {
+          await redirectByRole(session.user.id, session.user.email || undefined);
+        }
+      }
+    );
+
     return () => {
-      subscription?.unsubscribe?.();
+      subscription.unsubscribe();
     };
   }, []);
 
-  // ✅ Magic Link Login
-  const handleLogin = async () => {
+  async function handleLogin() {
     try {
       setLoading(true);
-      const email = ADMIN_EMAIL; // Only admin login right now
-      const { error } = await supabase.auth.signInWithOtp({ email });
+      const { error } = await supabase.auth.signInWithOtp({ email: ADMIN_EMAIL });
 
       if (error) {
         alert(`❌ ${error.message}`);
       } else {
-        alert("✅ Magic link sent to your email!");
+        alert("✅ Magic login link has been sent to your email.");
       }
     } finally {
       setLoading(false);
@@ -82,26 +102,32 @@ export default function LoginPage() {
   };
 
   return (
-    <main style={{ padding: "80px", textAlign: "center" }}>
-      <h1>Growfinitys Login</h1>
-      <p>Enter using your secure admin magic link login.</p>
+    <div
+      style={{
+        maxWidth: 360,
+        margin: "80px auto",
+        padding: 24,
+        textAlign: "center",
+        fontFamily: "sans-serif",
+      }}
+    >
+      <h2>Growfinitys Admin Login</h2>
+      <p>Access your internal dashboard securely.</p>
 
       <button
         onClick={handleLogin}
         disabled={loading}
         style={{
-          marginTop: "20px",
-          padding: "12px 22px",
-          background: "black",
-          color: "white",
-          borderRadius: "8px",
-          border: "none",
-          opacity: loading ? 0.5 : 1,
+          marginTop: 24,
+          padding: "12px 24px",
+          fontSize: 16,
           cursor: loading ? "default" : "pointer",
+          borderRadius: 6,
+          border: "1px solid #111",
         }}
       >
-        {loading ? "Sending Magic Link..." : "Send Magic Login Link"}
+        {loading ? "Sending magic link..." : "Login as Admin"}
       </button>
-    </main>
+    </div>
   );
 }
