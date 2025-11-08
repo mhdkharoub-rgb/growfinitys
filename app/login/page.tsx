@@ -12,7 +12,12 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   // ✅ Redirect user based on role
-  const redirectByRole = async (userId: string) => {
+  const redirectByRole = async (userId: string, email?: string) => {
+    if (email === ADMIN_EMAIL) {
+      router.replace("/admin");
+      return;
+    }
+
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")
@@ -21,28 +26,25 @@ export default function LoginPage() {
 
     if (profile?.role === "admin") {
       router.replace("/admin");
-      return;
+    } else {
+      router.replace("/dashboard");
     }
-
-    router.replace("/dashboard");
   };
 
-  // ✅ Auth State Listener (correct parentheses!)
+  // ✅ Session listener (build-safe)
   useEffect(() => {
-    const { data: subscription } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        if (session?.user) {
-          await redirectByRole(session.user.id);
-        }
+    const { data } = supabase.auth.onAuthStateChange(async (_, session) => {
+      if (session?.user) {
+        await redirectByRole(session.user.id, session.user.email ?? undefined);
       }
-    );
+    });
 
     return () => {
-      subscription?.unsubscribe?.();
+      data?.subscription?.unsubscribe?.();
     };
   }, []);
 
-  // ✅ Magic link login (admin only)
+  // ✅ Only one login function now — admin only
   const handleLogin = async () => {
     try {
       setLoading(true);
@@ -51,40 +53,9 @@ export default function LoginPage() {
       });
 
       if (error) {
-        alert("❌ " + error.message);
-      } else {
-        alert("✅ Magic login link sent to your email.");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(
-      async (_, session) => {
-        if (session?.user) {
-          await redirectByRole(session.user.id, session.user.email || undefined);
-        }
-      }
-    );
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  async function handleLogin() {
-    try {
-      setLoading(true);
-      const { error } = await supabase.auth.signInWithOtp({ email: ADMIN_EMAIL });
-
-      if (error) {
         alert(`❌ ${error.message}`);
       } else {
-        alert("✅ Magic login link has been sent to your email.");
+        alert("✅ Magic login link sent to your email.");
       }
     } finally {
       setLoading(false);
