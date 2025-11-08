@@ -23,6 +23,40 @@ export default function LoginPage() {
         router.replace("/admin");
         return;
       }
+    );
+    return () => {
+      subscription?.unsubscribe?.();
+    };
+  }, []);
+
+  // ✅ Magic Link Login
+  const handleLogin = async () => {
+    try {
+      setLoading(true);
+      const email = ADMIN_EMAIL; // Only admin login right now
+      const { error } = await supabase.auth.signInWithOtp({ email });
+
+      if (profile.email === ADMIN_EMAIL || profile.role === "admin") {
+        router.replace("/admin");
+      } else {
+        router.replace("/dashboard");
+      }
+    } catch {
+      router.replace("/dashboard");
+    }
+  };
+
+  // ✅ Listen for Supabase login event
+  useEffect(() => {
+    const { data: subscription } = supabase.auth.onAuthStateChange(
+      async (_, session) => {
+        if (session?.user?.id) {
+          await redirectByRole(session.user.id);
+        } else {
+          router.replace("/dashboard");
+        }
+      }
+    );
 
       const targetEmail = email ?? (await supabase.auth.getUser()).data.user?.email;
       if (targetEmail === ADMIN_EMAIL) {
@@ -65,7 +99,7 @@ export default function LoginPage() {
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
     <div
