@@ -1,55 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { createClient } from "@/lib/supabaseClient";
 
 const ADMIN_EMAIL = "mhdkharoub@gmail.com";
 const supabase = createClient();
 
 export default function LoginPage() {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  // ✅ Redirect user based on role
-  const redirectByRole = async (userId: string, email?: string) => {
-    if (email === ADMIN_EMAIL) {
-      router.replace("/admin");
-      return;
-    }
-
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", userId)
-      .single();
-
-    if (profile?.role === "admin") {
-      router.replace("/admin");
-    } else {
-      router.replace("/dashboard");
-    }
-  };
-
-  // ✅ Session listener (build-safe)
-  useEffect(() => {
-    const { data } = supabase.auth.onAuthStateChange(async (_, session) => {
-      if (session?.user) {
-        await redirectByRole(session.user.id, session.user.email ?? undefined);
-      }
-    });
-
-    return () => {
-      data?.subscription?.unsubscribe?.();
-    };
-  }, []);
-
-  // ✅ Only one login function now — admin only
   const handleLogin = async () => {
     try {
       setLoading(true);
       const { error } = await supabase.auth.signInWithOtp({
         email: ADMIN_EMAIL,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
       });
 
       if (error) {
