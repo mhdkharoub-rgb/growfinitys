@@ -10,26 +10,24 @@ export default function AuthCallback() {
   const router = useRouter();
 
   useEffect(() => {
-    const processLogin = async () => {
+    const finishLogin = async () => {
       const {
         data: { session },
       } = await supabase.auth.getSession();
 
       if (!session?.user) return;
 
-      if (session.user.email === "mhdkharoub@gmail.com") {
+      const email = session.user.email;
+
+      if (email === "mhdkharoub@gmail.com") {
         router.replace("/admin");
       } else {
         router.replace("/dashboard");
       }
     };
 
-    processLogin();
+    finishLogin();
   }, [router]);
 
-  return (
-    <div style={{ padding: 40, fontFamily: "sans-serif" }}>
-      Completing sign-in…
-    </div>
-  );
+  return <div style={{ padding: 40 }}>Completing sign-in…</div>;
 }
