@@ -1,49 +1,44 @@
-'use client';
-import { supabaseClient } from '@/lib/supabaseClient';
-import { useState } from 'react';
+"use client";
 
-export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [msg, setMsg] = useState<string | null>(null);
+import { useState } from "react";
+import { createClient } from "@/lib/supabaseClient";
 
-  async function onLogin(e: React.FormEvent) {
-    e.preventDefault();
+const ADMIN_EMAIL = "mhdkharoub@gmail.com";
+const supabase = createClient();
 
+export default function LoginPage() {
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async () => {
     try {
-      const supabase = supabaseClient();
-      if (!supabase) {
-        setMsg('Supabase is not configured. Please try again later.');
-        return;
-      }
+      setLoading(true);
+      const { error } = await supabase.auth.signInWithOtp({
+        email: ADMIN_EMAIL,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
 
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      setMsg(error ? error.message : 'Logged in!');
-      if (!error) window.location.href = '/dashboard';
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unexpected error logging in.';
-      setMsg(message);
+      if (error) {
+        alert(`❌ ${error.message}`);
+      } else {
+        alert("✅ Magic login link sent to your email.");
+      }
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
   return (
-    <form onSubmit={onLogin} className="max-w-md space-y-3">
-      <h1 className="text-xl font-semibold">Login</h1>
-      <input
-        className="w-full border p-2 rounded"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
-      <input
-        className="w-full border p-2 rounded"
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      <button className="px-4 py-2 border rounded">Login</button>
-      {msg && <div className="text-sm text-gray-600">{msg}</div>}
-    </form>
+    <div style={{ maxWidth: 350, margin: "80px auto", textAlign: "center" }}>
+      <h2>Growfinitys Admin Login</h2>
+      <button
+        onClick={handleLogin}
+        disabled={loading}
+        style={{ padding: "10px 16px", marginTop: 20 }}
+      >
+        {loading ? "Sending..." : "Login as Admin"}
+      </button>
+    </div>
   );
 }
