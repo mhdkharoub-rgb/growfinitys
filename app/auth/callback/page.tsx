@@ -2,7 +2,12 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabaseClient";
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
 
@@ -10,31 +15,30 @@ export default function AuthCallback() {
   const router = useRouter();
 
   useEffect(() => {
-    const processLogin = async () => {
+    const finishAuth = async () => {
+      // Validate session
       const { data } = await supabase.auth.getSession();
-      const email = data.session?.user?.email;
+      const session = data.session;
 
-      if (!email) {
+      if (!session) {
         router.replace("/login");
         return;
       }
 
-      // ✅ Admin goes to admin dashboard
-      if (email === ADMIN_EMAIL) {
+      // Check email → decide destination
+      if (session.user.email === ADMIN_EMAIL) {
         router.replace("/admin");
-        return;
+      } else {
+        router.replace("/dashboard");
       }
-
-      // ✅ Normal user goes to VIP dashboard
-      router.replace("/dashboard");
     };
 
-    processLogin();
-  }, []);
+    finishAuth();
+  }, [router]);
 
   return (
-    <div style={{ padding: 40, textAlign: "center" }}>
-      Logging you in...
+    <div className="min-h-screen flex items-center justify-center bg-black text-white">
+      <p>Signing you in...</p>
     </div>
   );
 }
