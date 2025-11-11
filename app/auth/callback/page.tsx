@@ -9,7 +9,7 @@ export default function AuthCallback() {
   const supabase = createClientComponentClient();
 
   useEffect(() => {
-    async function run() {
+    async function finish() {
       const {
         data: { session },
       } = await supabase.auth.getSession();
@@ -19,15 +19,15 @@ export default function AuthCallback() {
         return;
       }
 
-      // ✅ If login is successful, route based on email
-      if (session.user.email === "mhdkharoub@gmail.com") {
+      const email = session.user.email;
+      if (email === "mhdkharoub@gmail.com") {
         router.replace("/admin");
       } else {
         router.replace("/dashboard");
       }
     }
 
-    run();
+    finish();
   }, [router, supabase]);
 
   return <p>Authenticating…</p>;
