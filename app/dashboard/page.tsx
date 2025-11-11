@@ -1,15 +1,23 @@
 "use client";
 
-import TopBar from "@/components/TopBar";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
-export default function DashboardPage() {
+export default function Dashboard() {
+  const supabase = createClientComponentClient();
+  const router = useRouter();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (!data.session?.user) router.replace("/login");
+    });
+  }, []);
+
   return (
-    <div className="min-h-screen bg-black text-[#d4af37]">
-      <TopBar />
-      <div className="p-8 text-center">
-        <h2 className="text-3xl font-bold mb-4">Welcome to Growfinitys VIP Dashboard</h2>
-        <p>Exclusive AI signals and automation tools will appear here soon.</p>
-      </div>
+    <div style={{ padding: "40px", color: "#fff" }}>
+      <h1 style={{ fontSize: "32px", marginBottom: "16px", color: "#FFD87A" }}>VIP Dashboard</h1>
+      <p>Exclusive content, AI growth signals, and automations coming soon.</p>
     </div>
   );
 }

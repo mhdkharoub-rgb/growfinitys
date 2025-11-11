@@ -11,35 +11,32 @@ export default function LoginPage() {
 
   const signInWithGoogle = async () => {
     setLoading(true);
-    const { error } = await supabase.auth.signInWithOAuth({
+    await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
       },
     });
-    if (error) alert(`❌ ${error.message}`);
     setLoading(false);
   };
 
   return (
-    <div
-      style={{
-        display: "flex",
-        minHeight: "100vh",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "linear-gradient(135deg, #111, #222)",
-        color: "#fff",
-        textAlign: "center",
-        padding: "24px",
-      }}
-    >
+    <div style={{
+      display: "flex",
+      minHeight: "100vh",
+      alignItems: "center",
+      justifyContent: "center",
+      background: "linear-gradient(135deg, #0b0b0c, #1a1a1f)",
+      color: "#fff",
+      padding: "28px",
+      textAlign: "center"
+    }}>
       <div style={{ maxWidth: "420px", width: "100%" }}>
-        <h1 style={{ fontSize: "32px", fontWeight: "600", marginBottom: "12px" }}>
-          Welcome to <span style={{ color: "#FFD87A" }}>Growfinitys</span>
+        <h1 style={{ fontSize: "36px", marginBottom: "12px" }}>
+          Welcome to <strong style={{ color: "#FFD87A" }}>Growfinitys</strong>
         </h1>
-        <p style={{ opacity: 0.8, marginBottom: "32px" }}>
-          Premium AI Business Growth Platform
+        <p style={{ opacity: 0.75, marginBottom: "32px" }}>
+          Premium AI Growth Platform
         </p>
 
         <button
@@ -47,29 +44,23 @@ export default function LoginPage() {
           disabled={loading}
           style={{
             width: "100%",
-            padding: "14px 22px",
+            padding: "14px",
             fontSize: "18px",
-            borderRadius: "8px",
-            border: "none",
+            fontWeight: "600",
+            borderRadius: "10px",
             cursor: "pointer",
             background: "linear-gradient(90deg, #FFD87A, #E5B55A, #C9983F)",
             color: "#111",
-            fontWeight: "600",
-            boxShadow: "0 0 14px rgba(255, 220, 160, 0.6)",
-            transition: "0.3s",
-          }}
-          onMouseOver={(e) => {
-            e.currentTarget.style.boxShadow = "0 0 24px rgba(255, 220, 160, 0.9)";
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.boxShadow = "0 0 14px rgba(255, 220, 160, 0.6)";
+            border: "none",
+            boxShadow: "0 0 18px rgba(255, 215, 140, 0.6)",
+            transition: ".3s"
           }}
         >
           {loading ? "Connecting..." : "Continue with Google"}
         </button>
 
-        <p style={{ marginTop: "22px", opacity: 0.6, fontSize: "14px" }}>
-          Secure Encrypted Login • No Password Needed
+        <p style={{ marginTop: "20px", opacity: 0.45, fontSize: "14px" }}>
+          No password needed – secure, encrypted login
         </p>
       </div>
     </div>
