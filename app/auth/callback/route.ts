@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { supabaseRoute } from "@/lib/supabaseServer";
 
+// Handles the Supabase magic-link callback directly via a route handler. A
+// corresponding page.tsx was removed to avoid conflicting handlers in this
+// segment.
+
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const code = url.searchParams.get("code");
