@@ -1,51 +1,23 @@
-"use client";
-import { useMemo } from "react";
-import { createBrowserSupabaseClient } from "@supabase/auth-helpers-nextjs";
-import { useRouter } from "next/navigation";
+import { requireSession } from "@/lib/auth";
 
-export default function Dashboard() {
-  const router = useRouter();
-  const supabase = useMemo(() => {
-    if (typeof window === "undefined") {
-      return null;
-    }
-
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-    if (!url || !anonKey) {
-      console.warn("Supabase environment variables are not configured.");
-      return null;
-    }
-
-    return createBrowserSupabaseClient({ supabaseUrl: url, supabaseKey: anonKey });
-  }, []);
-
-  async function handleLogout() {
-    if (!supabase) {
-      router.push("/");
-      return;
-    }
-
-    await supabase.auth.signOut();
-    router.push("/");
-  }
+export default async function Dashboard() {
+  await requireSession();
 
   return (
-    <main className="min-h-screen bg-black text-white flex flex-col items-center justify-center text-center px-6">
-      <h1 className="text-5xl font-bold text-gold mb-6">Welcome to Growfinitys VIP Dashboard</h1>
-      <p className="text-gray-400 mb-10">You’re logged in. Exclusive signals coming soon!</p>
-      <button
-        onClick={handleLogout}
-        className="bg-gold text-black font-semibold px-8 py-3 rounded-xl hover:bg-goldDark transition"
-      >
-        Logout
-      </button>
-      {!supabase && (
-        <p className="mt-6 text-sm text-gray-500">
-          Supabase is not configured. Please add your project credentials.
+    <main className="min-h-screen bg-black text-zinc-100 px-6 py-16">
+      <div className="mx-auto max-w-3xl">
+        <h1 className="text-3xl font-bold text-[#d4af37]">Growfinitys VIP Dashboard</h1>
+        <p className="mt-2 text-zinc-300">
+          Exclusive AI signals and automation tools will appear here soon.
         </p>
-      )}
+        <div className="mt-8">
+          <form action="/api/auth/logout" method="post">
+            <button className="rounded border border-zinc-700 px-4 py-2 hover:bg-zinc-900">
+              Log out
+            </button>
+          </form>
+        </div>
+      </div>
     </main>
   );
 }
