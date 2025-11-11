@@ -15,17 +15,10 @@ export default function LoginPage() {
       setLoading(true);
       const email = ADMIN_EMAIL || "mhdkharoub@gmail.com";
 
-      const { error } = await supabase.auth.signInWithOtp({ email });
-
-      if (error) {
-        alert("❌ " + error.message);
-      } else {
-        alert("✅ Magic login link sent to your email.");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+    const { error } = await supabase.auth.signInWithOtp({
+  email,
+  options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+});
 
   // When supabase confirms login, decide where to go
   supabase.auth.onAuthStateChange(async (_, session) => {
