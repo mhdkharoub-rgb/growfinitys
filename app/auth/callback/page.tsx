@@ -1,16 +1,34 @@
-import { NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+"use client";
 
-export async function GET(request: Request) {
-  const requestUrl = new URL(request.url);
-  const code = requestUrl.searchParams.get("code");
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
-  if (code) {
-    const supabase = createRouteHandlerClient({ cookies });
-    await supabase.auth.exchangeCodeForSession(code);
-  }
+export default function AuthCallback() {
+  const router = useRouter();
+  const supabase = createClientComponentClient();
 
-  // After signing in, redirect to login so our login page redirects based on role
-  return NextResponse.redirect(`${requestUrl.origin}/login`);
+  useEffect(() => {
+    async function run() {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session?.user) {
+        router.replace("/login");
+        return;
+      }
+
+      // ✅ If login is successful, route based on email
+      if (session.user.email === "mhdkharoub@gmail.com") {
+        router.replace("/admin");
+      } else {
+        router.replace("/dashboard");
+      }
+    }
+
+    run();
+  }, [router, supabase]);
+
+  return <p>Authenticating…</p>;
 }
