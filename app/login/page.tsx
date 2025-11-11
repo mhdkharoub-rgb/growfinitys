@@ -1,41 +1,59 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabaseClient";
+import { createClient } from "@supabase/supabase-js";
 
-const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
+const ADMIN_EMAIL: string = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "";
 
 export default function LoginPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  // ✅ If already logged in, redirect by role
+  // ✅ Redirect users automatically if already logged in
   useEffect(() => {
     const checkSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      const email = data.session?.user?.email;
+      const { data: session } = await supabase.auth.getSession();
 
-      if (email) {
-        if (email === ADMIN_EMAIL) {
-          router.replace("/admin");
-        } else {
-          router.replace("/dashboard");
-        }
+      if (session.session?.user?.email === ADMIN_EMAIL) {
+        router.replace("/admin");
+      } else if (session.session?.user) {
+        router.replace("/dashboard");
       }
     };
+
     checkSession();
-  }, []);
+  }, [router]);
 
-  // ✅ Send Magic Link
-  const handleLogin = async () => {
+  // ✅ Listen for auth state changes (magic link callback)
+  useEffect(() => {
+    const { data } = supabase.auth.onAuthStateChange(async (_, session) => {
+      if (session?.user?.email === ADMIN_EMAIL) {
+        router.replace("/admin");
+      } else if (session?.user) {
+        router.replace("/dashboard");
+      }
+    });
+
+    return () => data.subscription.unsubscribe();
+  }, [router]);
+
+  // ✅ Send magic login link to admin
+  const handleAdminLogin = async () => {
+    setLoading(true);
+
     try {
-      setLoading(true);
-
-      const email = ADMIN_EMAIL; // only admin login for now
+      if (!ADMIN_EMAIL) {
+        alert("❌ Missing NEXT_PUBLIC_ADMIN_EMAIL in Vercel environment.");
+        return;
+      }
 
       const { error } = await supabase.auth.signInWithOtp({
-        email,
+        email: ADMIN_EMAIL,
         options: {
           emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
@@ -43,35 +61,32 @@ export default function LoginPage() {
 
       if (error) {
         alert("❌ " + error.message);
-      } else {
-        alert("✅ Magic link sent to your email. Check inbox.");
+        return;
       }
+
+      alert("✅ Magic login link sent. Check your email.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ padding: 40, textAlign: "center" }}>
-      <h1>Growfinitys Admin Login</h1>
-      <p>Only admin access is enabled right now.</p>
+    <div className="min-h-screen flex items-center justify-center bg-black text-white">
+      <div className="bg-gray-900 p-8 rounded-xl shadow-xl w-full max-w-md text-center">
+        <h1 className="text-2xl font-bold mb-6">Growfinitys Login</h1>
 
-      <button
-        onClick={handleLogin}
-        disabled={loading}
-        style={{
-          marginTop: 20,
-          padding: "12px 24px",
-          border: "none",
-          borderRadius: 6,
-          cursor: "pointer",
-          background: "#000",
-          color: "#fff",
-          fontWeight: "bold",
-        }}
-      >
-        {loading ? "Sending magic link..." : "Login as Admin"}
-      </button>
+        <button
+          onClick={handleAdminLogin}
+          disabled={loading}
+          className="w-full py-3 bg-yellow-500 hover:bg-yellow-600 rounded-lg font-semibold transition"
+        >
+          {loading ? "Sending Magic Link..." : "Login as Admin"}
+        </button>
+
+        <p className="text-sm text-gray-400 mt-4">
+          You will receive a magic link in your email.
+        </p>
+      </div>
     </div>
   );
 }
