@@ -1,37 +1,60 @@
-export default function Home() {
-  return (
-    <main className="min-h-screen bg-black text-zinc-100">
-      <section className="mx-auto max-w-5xl px-6 py-24 text-center">
-        <h1 className="text-4xl md:text-6xl font-bold">
-          Growfinitys — AI Signals & Automation
-        </h1>
-        <p className="mt-4 text-zinc-300">
-          Premium Forex & Crypto signals, automated reporting, and VIP tools.
-        </p>
-        <div className="mt-8 flex justify-center gap-4">
-          <a
-            href="/pricing"
-            className="rounded-md border border-[#d4af37] px-6 py-3 hover:bg-[#d4af37] hover:text-black transition"
-          >
-            View Plans
-          </a>
-          <a
-            href="/login"
-            className="rounded-md bg-[#d4af37] px-6 py-3 text-black hover:opacity-90 transition"
-          >
-            Login
-          </a>
-        </div>
-      </section>
+"use client";
 
-      <section className="mx-auto max-w-5xl px-6 py-16">
-        <h2 className="text-2xl font-semibold text-[#d4af37]">Features</h2>
-        <ul className="mt-6 grid gap-4 md:grid-cols-3">
-          <li className="rounded border border-zinc-800 p-4">AI Signals</li>
-          <li className="rounded border border-zinc-800 p-4">Automations</li>
-          <li className="rounded border border-zinc-800 p-4">VIP Tools</li>
-        </ul>
-      </section>
-    </main>
+import Link from "next/link";
+import { supabase } from "@/lib/supabaseClient";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+
+export default function Home() {
+  const router = useRouter();
+  const [role, setRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session) return;
+
+      const email = session.session.user.email;
+      if (!email) return;
+
+      // Determine role
+      if (email === process.env.NEXT_PUBLIC_ADMIN_EMAIL) {
+        setRole("admin");
+      } else {
+        setRole("vip");
+      }
+    };
+
+    getUser();
+  }, []);
+
+  return (
+    <div style={{ textAlign: "center", paddingTop: "80px" }}>
+      <h1>Welcome to Growfinitys</h1>
+      <p>Your AI Business Content & VIP Growth Platform</p>
+
+      {!role && (
+        <Link href="/login">
+          <button>Login</button>
+        </Link>
+      )}
+
+      {role === "admin" && (
+        <>
+          <Link href="/admin">
+            <button style={{ marginRight: "12px" }}>Go to Admin Dashboard</button>
+          </Link>
+          <Link href="/dashboard">
+            <button>Go to VIP Dashboard</button>
+          </Link>
+        </>
+      )}
+
+      {role === "vip" && (
+        <Link href="/dashboard">
+          <button>Enter VIP Dashboard</button>
+        </Link>
+      )}
+    </div>
   );
 }
