@@ -1,6 +1,6 @@
-import { createRouteHandlerClient, createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
+import { redirect } from "next/navigation";
+import { supabaseServer } from "./supabaseServer";
 
 export function requireZapierAuth(req: NextRequest): NextResponse | null {
   const secret = process.env.ZAPIER_SECRET;
@@ -19,24 +19,35 @@ export function requireZapierAuth(req: NextRequest): NextResponse | null {
   return null;
 }
 
-export async function requireAdmin(req?: NextRequest) {
-  const supabase = req
-    ? createRouteHandlerClient({ cookies })
-    : createServerComponentClient({ cookies });
+export async function requireSession() {
+  const supabase = supabaseServer();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
 
-  const { data, error } = await supabase.auth.getUser();
-  if (error) {
-    throw error;
-  }
+  if (!session) redirect("/login");
+  return session;
+}
 
-  const user = data?.user;
-  if (!user) {
-    throw new Error("Unauthorized: No user logged in");
-  }
+export async function requireAdmin() {
+  const supabase = supabaseServer();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
 
-  if (!user.email?.endsWith("@growfinitys.com")) {
-    throw new Error("Unauthorized: Not an admin");
-  }
+  if (!session) redirect("/login");
 
-  return user;
+  const adminEmail = process.env.ADMIN_EMAIL?.toLowerCase();
+  const email = session.user.email?.toLowerCase();
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", session.user.id)
+    .maybeSingle();
+
+  const isAdmin = profile?.role === "admin" || (adminEmail && email === adminEmail);
+  if (!isAdmin) redirect("/dashboard");
+
+  return session;
 }

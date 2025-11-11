@@ -1,23 +1,23 @@
-"use client";
+import { requireSession } from "@/lib/auth";
 
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-
-export default function Dashboard() {
-  const supabase = createClientComponentClient();
-  const router = useRouter();
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (!data.session?.user) router.replace("/login");
-    });
-  }, []);
+export default async function Dashboard() {
+  await requireSession();
 
   return (
-    <div style={{ padding: "40px", color: "#fff" }}>
-      <h1 style={{ fontSize: "32px", marginBottom: "16px", color: "#FFD87A" }}>VIP Dashboard</h1>
-      <p>Exclusive content, AI growth signals, and automations coming soon.</p>
-    </div>
+    <main className="min-h-screen bg-black text-zinc-100 px-6 py-16">
+      <div className="mx-auto max-w-3xl">
+        <h1 className="text-3xl font-bold text-[#d4af37]">Growfinitys VIP Dashboard</h1>
+        <p className="mt-2 text-zinc-300">
+          Exclusive AI signals and automation tools will appear here soon.
+        </p>
+        <div className="mt-8">
+          <form action="/api/auth/logout" method="post">
+            <button className="rounded border border-zinc-700 px-4 py-2 hover:bg-zinc-900">
+              Log out
+            </button>
+          </form>
+        </div>
+      </div>
+    </main>
   );
 }

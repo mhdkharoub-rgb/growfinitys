@@ -1,59 +1,24 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { requireAdmin } from "@/lib/auth";
 
-export async function POST(req: Request) {
-  const supabase = createServerComponentClient({ cookies });
-  const {
-    data: { user },
-    error: userErr,
-  } = await supabase.auth.getUser();
+export async function POST() {
+  await requireAdmin();
 
-  if (userErr || !user) {
-    console.error("❌ No Supabase user found", userErr);
-    return NextResponse.json({ error: "Unauthorized - no user" }, { status: 401 });
+  const url = process.env.ZAPIER_VIP_WEBHOOK_URL;
+  if (!url) {
+    return NextResponse.json({ error: "Missing ZAPIER_VIP_WEBHOOK_URL" }, { status: 500 });
   }
 
-  // Check if user is admin or trusted email
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role, email")
-    .eq("id", user.id)
-    .single();
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ audience: "vip", count: 12 }),
+  });
 
-  const email = user.email || profile?.email || "";
-  const role = profile?.role || "";
-
-  // ✅ Flexible check: allows admin role OR trusted email
-  const isAdmin =
-    role === "admin" ||
-    email === "mhdkharoub.rgb@gmail.com" ||
-    email === "mhdkharoub123@gmail.com";
-
-  if (!isAdmin) {
-    console.error("Unauthorized - role/email mismatch", { role, email });
-    return NextResponse.json({ error: "Unauthorized - role/email mismatch" }, { status: 401 });
+  if (!response.ok) {
+    const text = await response.text();
+    return NextResponse.json({ error: "Zap failed", detail: text }, { status: 500 });
   }
 
-  // Send to Zapier (using env variable)
-  const webhookUrl = process.env.ZAPIER_VIP_WEBHOOK_URL;
-  if (!webhookUrl) {
-    return NextResponse.json({ error: "Missing Zapier webhook URL" }, { status: 500 });
-  }
-
-  try {
-    const res = await fetch(webhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ audience: "vip", count: 12 }),
-    });
-
-    const text = await res.text();
-    console.log("✅ VIP alert sent:", text);
-
-    return NextResponse.json({ success: true, result: text });
-  } catch (err: any) {
-    console.error("❌ Failed to send alert:", err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
-  }
+  return NextResponse.json({ ok: true });
 }

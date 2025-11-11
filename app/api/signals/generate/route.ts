@@ -12,7 +12,7 @@ function validateAudience(value: unknown): value is Audience {
 
 export async function POST(req: NextRequest) {
   try {
-    await requireAdmin(req);
+    await requireAdmin();
 
     const { audience, count } = await req.json();
 

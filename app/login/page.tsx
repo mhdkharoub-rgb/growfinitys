@@ -1,68 +1,70 @@
 "use client";
 
-import { useState } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function LoginPage() {
-  const supabase = createClientComponentClient();
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  const signInWithGoogle = async () => {
-    setLoading(true);
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
-      },
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, _session) => {
+      // no-op; the /auth/callback route handles redirects after OTP exchange
     });
-    setLoading(false);
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const handleLogin = async () => {
+    try {
+      setLoading(true);
+      const email = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? process.env.ADMIN_EMAIL ?? "";
+      if (!email) {
+        alert("ADMIN_EMAIL is not configured in environment variables.");
+        return;
+      }
+
+      const redirectTo =
+        typeof window !== "undefined"
+          ? `${window.location.origin}/auth/callback`
+          : "/auth/callback";
+
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: redirectTo },
+      });
+
+      if (error) {
+        alert("❌ " + error.message);
+      } else {
+        alert("✅ Magic link sent to your email.");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div style={{
-      display: "flex",
-      minHeight: "100vh",
-      alignItems: "center",
-      justifyContent: "center",
-      background: "linear-gradient(135deg, #0b0b0c, #1a1a1f)",
-      color: "#fff",
-      padding: "28px",
-      textAlign: "center"
-    }}>
-      <div style={{ maxWidth: "420px", width: "100%" }}>
-        <h1 style={{ fontSize: "36px", marginBottom: "12px" }}>
-          Welcome to <strong style={{ color: "#FFD87A" }}>Growfinitys</strong>
-        </h1>
-        <p style={{ opacity: 0.75, marginBottom: "32px" }}>
-          Premium AI Growth Platform
+    <main className="min-h-screen bg-black text-zinc-100 flex items-center justify-center px-6">
+      <div className="w-full max-w-md rounded border border-zinc-800 p-6">
+        <h1 className="text-2xl font-bold text-[#d4af37]">Admin Login</h1>
+        <p className="mt-2 text-sm text-zinc-400">
+          Click the button below to receive a magic link.
         </p>
-
         <button
-          onClick={signInWithGoogle}
+          onClick={handleLogin}
           disabled={loading}
-          style={{
-            width: "100%",
-            padding: "14px",
-            fontSize: "18px",
-            fontWeight: "600",
-            borderRadius: "10px",
-            cursor: "pointer",
-            background: "linear-gradient(90deg, #FFD87A, #E5B55A, #C9983F)",
-            color: "#111",
-            border: "none",
-            boxShadow: "0 0 18px rgba(255, 215, 140, 0.6)",
-            transition: ".3s"
-          }}
+          className="mt-6 w-full rounded bg-[#d4af37] px-4 py-3 text-black hover:opacity-90 disabled:opacity-60"
         >
-          {loading ? "Connecting..." : "Continue with Google"}
+          {loading ? "Sending..." : "Send Magic Link"}
         </button>
-
-        <p style={{ marginTop: "20px", opacity: 0.45, fontSize: "14px" }}>
-          No password needed – secure, encrypted login
-        </p>
+        <a href="/" className="mt-4 block text-center text-zinc-400 hover:text-zinc-200">
+          ← Back to Home
+        </a>
       </div>
-    </div>
+    </main>
   );
 }

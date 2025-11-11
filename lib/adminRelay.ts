@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdmin } from "./auth";
+import { cookies } from "next/headers";
+import { supabaseRoute } from "./supabaseServer";
 
 type Tier = "vip" | "pro" | "basic";
 
@@ -30,13 +31,32 @@ async function ensureAuthorized(req: NextRequest) {
     }
   }
 
-  try {
-    await requireAdmin(req);
-    return true;
-  } catch (error) {
-    console.warn("[adminRelay] Unauthorized access attempt", error);
+  const cookieStore = cookies();
+  const supabase = supabaseRoute(cookieStore);
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session) {
+    console.warn("[adminRelay] Unauthorized access attempt: missing session");
     return false;
   }
+
+  const adminEmail = process.env.ADMIN_EMAIL?.toLowerCase();
+  const email = session.user.email?.toLowerCase();
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", session.user.id)
+    .maybeSingle();
+
+  const isAdmin = profile?.role === "admin" || (adminEmail && email === adminEmail);
+  if (!isAdmin) {
+    console.warn("[adminRelay] Unauthorized access attempt: insufficient role", { email, role: profile?.role });
+  }
+
+  return Boolean(isAdmin);
 }
 
 export async function relayTierAlert(req: NextRequest, tier: Tier) {

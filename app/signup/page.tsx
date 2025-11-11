@@ -1,5 +1,5 @@
 "use client";
-import { supabaseClient } from "@/lib/supabaseClient";
+import { supabase } from "@/lib/supabaseClient";
 import { useState } from "react";
 
 export default function Signup() {
@@ -11,7 +11,6 @@ export default function Signup() {
     e.preventDefault();
 
     try {
-      const supabase = supabaseClient();
       const { error } = await supabase.auth.signUp({ email, password });
       setMsg(error ? error.message : "Account created! Check your email to confirm.");
       if (!error) window.location.href = "/dashboard";
