@@ -14,21 +14,18 @@ export default function AuthCallback() {
         data: { session },
       } = await supabase.auth.getSession();
 
-      if (!session?.user) {
-        router.replace("/login");
-        return;
-      }
+      if (!session?.user) return router.replace("/login");
 
       const email = session.user.email;
+
       if (email === "mhdkharoub@gmail.com") {
         router.replace("/admin");
       } else {
         router.replace("/dashboard");
       }
     }
-
     finish();
   }, [router, supabase]);
 
-  return <p>Authenticating…</p>;
+  return <p style={{ textAlign: "center", marginTop: "60px" }}>Authenticating…</p>;
 }
