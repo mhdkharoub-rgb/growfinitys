@@ -1,16 +1,25 @@
-import { requireAdmin } from '@/lib/auth';
-import AdminPanel from '@/components/AdminPanel';
+"use client";
 
-export const dynamic = 'force-dynamic';
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
-export default async function AdminPage() {
-  const user = await requireAdmin();
-  if (!user) return <div>Not authorized.</div>;
+export default function AdminDashboard() {
+  const supabase = createClientComponentClient();
+  const router = useRouter();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session?.user.email !== "mhdkharoub@gmail.com") {
+        router.replace("/dashboard");
+      }
+    });
+  }, []);
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Admin Panel</h1>
-      <AdminPanel />
+    <div style={{ padding: "40px", color: "#fff" }}>
+      <h1 style={{ fontSize: "32px", marginBottom: "16px", color: "#FFD87A" }}>Admin Dashboard</h1>
+      <p>Welcome, Mohammad. Manage platform users, pricing, and content here.</p>
     </div>
   );
 }
