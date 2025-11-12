@@ -1,44 +1,50 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { createClient } from "@supabase/supabase-js";
+import { useRouter, useSearchParams } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL as string | undefined;
 
-const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
-
-export default function AuthCallback() {
+export default function AuthCallbackPage() {
   const router = useRouter();
+  const qs = useSearchParams();
 
   useEffect(() => {
-    const finishAuth = async () => {
-      // Validate session
-      const { data } = await supabase.auth.getSession();
-      const session = data.session;
-
-      if (!session) {
-        router.replace("/login");
-        return;
+    (async () => {
+      const error = qs.get("error_description") || qs.get("error");
+      if (error) {
+        alert("Auth Notice: " + error.replace(/\+/g, " "));
       }
 
-      // Check email → decide destination
-      if (session.user.email === ADMIN_EMAIL) {
-        router.replace("/admin");
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (session?.user) {
+        const email = session.user.email?.toLowerCase() ?? "";
+        if (ADMIN_EMAIL && email === ADMIN_EMAIL.toLowerCase()) {
+          router.replace("/admin");
+          return;
+        }
+
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", session.user.id)
+          .maybeSingle();
+
+        if (profile?.role === "admin") router.replace("/admin");
+        else router.replace("/dashboard");
       } else {
-        router.replace("/dashboard");
+        router.replace("/login");
       }
-    };
-
-    finishAuth();
-  }, [router]);
+    })();
+  }, [qs, router]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black text-white">
-      <p>Signing you in...</p>
-    </div>
+    <main style={{ minHeight: "60dvh", display: "grid", placeItems: "center" }}>
+      <p style={{ opacity: 0.85 }}>Finishing sign-in…</p>
+    </main>
   );
 }

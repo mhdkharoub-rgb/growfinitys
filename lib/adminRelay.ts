@@ -42,7 +42,9 @@ async function ensureAuthorized(req: NextRequest) {
     return false;
   }
 
-  const adminEmail = process.env.ADMIN_EMAIL?.toLowerCase();
+  const adminEmail =
+    process.env.ADMIN_EMAIL?.toLowerCase() ||
+    process.env.NEXT_PUBLIC_ADMIN_EMAIL?.toLowerCase();
   const email = session.user.email?.toLowerCase();
 
   const { data: profile } = await supabase

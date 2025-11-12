@@ -1,39 +1,32 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs";
+import type { Database } from "@/lib/types";
 
-const ADMIN_EMAIL = "mhdkharoub@gmail.com";
+export const config = {
+  matcher: ["/admin", "/dashboard", "/auth/callback"],
+};
 
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next();
-  const supabase = createMiddlewareClient({ req, res });
+  const supabase = createMiddlewareClient<Database>({ req, res });
 
   const {
     data: { session },
   } = await supabase.auth.getSession();
 
-  const url = req.nextUrl;
-  const email = session?.user?.email;
+  const url = new URL(req.url);
+  const pathname = url.pathname;
 
-  if (url.pathname === "/" || url.pathname.startsWith("/login")) {
+  if (pathname.startsWith("/auth/callback")) {
     return res;
   }
 
-  if (!session) {
-    return NextResponse.redirect(new URL("/login", req.url));
-  }
-
-  if (email === ADMIN_EMAIL && url.pathname === "/dashboard") {
-    return NextResponse.redirect(new URL("/admin", req.url));
-  }
-
-  if (url.pathname.startsWith("/admin") && email !== ADMIN_EMAIL) {
-    return NextResponse.redirect(new URL("/dashboard", req.url));
+  if (pathname.startsWith("/dashboard") || pathname.startsWith("/admin")) {
+    if (!session?.user) {
+      const login = new URL("/login", req.url);
+      return NextResponse.redirect(login);
+    }
   }
 
   return res;
 }
-
-export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
-};

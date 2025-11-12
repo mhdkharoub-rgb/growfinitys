@@ -1,60 +1,46 @@
-"use client";
-
 import Link from "next/link";
-import { supabase } from "@/lib/supabaseClient";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 
 export default function Home() {
-  const router = useRouter();
-  const [role, setRole] = useState<string | null>(null);
-
-  useEffect(() => {
-    const getUser = async () => {
-      const { data: session } = await supabase.auth.getSession();
-      if (!session.session) return;
-
-      const email = session.session.user.email;
-      if (!email) return;
-
-      // Determine role
-      if (email === process.env.NEXT_PUBLIC_ADMIN_EMAIL) {
-        setRole("admin");
-      } else {
-        setRole("vip");
-      }
-    };
-
-    getUser();
-  }, []);
-
   return (
-    <div style={{ textAlign: "center", paddingTop: "80px" }}>
-      <h1>Welcome to Growfinitys</h1>
-      <p>Your AI Business Content & VIP Growth Platform</p>
-
-      {!role && (
-        <Link href="/login">
-          <button>Login</button>
-        </Link>
-      )}
-
-      {role === "admin" && (
-        <>
-          <Link href="/admin">
-            <button style={{ marginRight: "12px" }}>Go to Admin Dashboard</button>
+    <main style={{ minHeight: "100dvh", display: "grid", placeItems: "center" }}>
+      <div style={{ textAlign: "center", maxWidth: 720, padding: "24px" }}>
+        <h1
+          style={{ fontSize: 36, fontWeight: 800, color: "#d4af37", marginBottom: 12 }}
+        >
+          Growfinitys
+        </h1>
+        <p style={{ opacity: 0.9, marginBottom: 24 }}>
+          Premium AI signals and automation across Basic, Pro, and VIP tiers.
+        </p>
+        <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+          <Link
+            href="/pricing"
+            style={{
+              padding: "10px 16px",
+              border: "1px solid #2a2a2a",
+              borderRadius: 8,
+              textDecoration: "none",
+              color: "#f5f5f5",
+            }}
+          >
+            Pricing
           </Link>
-          <Link href="/dashboard">
-            <button>Go to VIP Dashboard</button>
+          <Link
+            href="/login"
+            style={{
+              padding: "10px 16px",
+              border: "1px solid #d4af37",
+              color: "#0b0b0b",
+              background: "#d4af37",
+              borderRadius: 8,
+              textDecoration: "none",
+              fontWeight: 600,
+            }}
+          >
+            Login
           </Link>
-        </>
-      )}
-
-      {role === "vip" && (
-        <Link href="/dashboard">
-          <button>Enter VIP Dashboard</button>
-        </Link>
-      )}
-    </div>
+        </div>
+      </div>
+    </main>
   );
 }
