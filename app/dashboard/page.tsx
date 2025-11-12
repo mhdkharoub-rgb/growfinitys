@@ -1,51 +1,48 @@
-"use client";
-import { useMemo } from "react";
-import { createBrowserSupabaseClient } from "@supabase/auth-helpers-nextjs";
-import { useRouter } from "next/navigation";
+import { supabaseServer } from "@/lib/supabaseServer";
+import Link from "next/link";
 
-export default function Dashboard() {
-  const router = useRouter();
-  const supabase = useMemo(() => {
-    if (typeof window === "undefined") {
-      return null;
-    }
+export const dynamic = "force-dynamic";
 
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+export default async function DashboardPage() {
+  const supabase = supabaseServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-    if (!url || !anonKey) {
-      console.warn("Supabase environment variables are not configured.");
-      return null;
-    }
-
-    return createBrowserSupabaseClient({ supabaseUrl: url, supabaseKey: anonKey });
-  }, []);
-
-  async function handleLogout() {
-    if (!supabase) {
-      router.push("/");
-      return;
-    }
-
-    await supabase.auth.signOut();
-    router.push("/");
+  if (!user) {
+    return (
+      <main style={{ minHeight: "60dvh", display: "grid", placeItems: "center" }}>
+        <div>
+          <p>Not authorized.</p>
+          <p>
+            <Link href="/login" style={{ color: "#d4af37" }}>
+              Go to Login
+            </Link>
+          </p>
+        </div>
+      </main>
+    );
   }
 
   return (
-    <main className="min-h-screen bg-black text-white flex flex-col items-center justify-center text-center px-6">
-      <h1 className="text-5xl font-bold text-gold mb-6">Welcome to Growfinitys VIP Dashboard</h1>
-      <p className="text-gray-400 mb-10">You’re logged in. Exclusive signals coming soon!</p>
-      <button
-        onClick={handleLogout}
-        className="bg-gold text-black font-semibold px-8 py-3 rounded-xl hover:bg-goldDark transition"
-      >
-        Logout
-      </button>
-      {!supabase && (
-        <p className="mt-6 text-sm text-gray-500">
-          Supabase is not configured. Please add your project credentials.
-        </p>
-      )}
+    <main style={{ padding: 24 }}>
+      <h1 style={{ color: "#d4af37", fontSize: 28, fontWeight: 800 }}>VIP Dashboard</h1>
+      <p style={{ opacity: 0.9, marginTop: 6 }}>You’re logged in as {user.email}</p>
+
+      <form action="/api/auth/logout" method="post" style={{ marginTop: 16 }}>
+        <button
+          type="submit"
+          style={{
+            padding: "8px 12px",
+            borderRadius: 8,
+            border: "1px solid #2a2a2a",
+            background: "#1a1a1a",
+            color: "#f5f5f5",
+          }}
+        >
+          Logout
+        </button>
+      </form>
     </main>
   );
 }
