@@ -1,4 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cookies, headers } from "next/headers";
+import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
+
+import type { Database } from "./types";
 import { cookies } from "next/headers";
 import { supabaseRoute } from "./supabaseServer";
 
@@ -31,6 +35,7 @@ async function ensureAuthorized(req: NextRequest) {
     }
   }
 
+  const supabase = createRouteHandlerClient<Database>({ cookies, headers });
   const cookieStore = cookies();
   const supabase = supabaseRoute(cookieStore);
   const {
@@ -55,6 +60,10 @@ async function ensureAuthorized(req: NextRequest) {
 
   const isAdmin = profile?.role === "admin" || (adminEmail && email === adminEmail);
   if (!isAdmin) {
+    console.warn("[adminRelay] Unauthorized access attempt: insufficient role", {
+      email,
+      role: profile?.role,
+    });
     console.warn("[adminRelay] Unauthorized access attempt: insufficient role", { email, role: profile?.role });
   }
 
