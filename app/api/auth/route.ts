@@ -1,7 +1,8 @@
-import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
 
 export async function GET() {
-  const cookieKeys = Array.from(cookies().keys());
-  return NextResponse.json({ cookies: cookieKeys });
+  const allCookies = cookies().getAll();
+  const cookieNames = allCookies.map((c) => c.name);
+  return NextResponse.json({ cookies: cookieNames });
 }
