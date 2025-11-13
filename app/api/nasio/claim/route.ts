@@ -1,33 +1,33 @@
-import { NextRequest, NextResponse } from "next/server";
-import { NasioReturnSchema, isValidReturnToken } from "@/lib/nasio";
-import { supabaseServer } from "@/lib/supabaseServer";
+import { NextResponse } from "next/server";
+import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
+import { cookies } from "next/headers";
+import type { Database } from "@/lib/types";
 
-export const dynamic = "force-dynamic";
+export async function POST(request: Request) {
+  const supabase = createRouteHandlerClient<Database>({ cookies });
+  const { email } = await request.json();
 
-export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const parsed = NasioReturnSchema.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
-  const { plan, email, token } = parsed.data;
+  const { data: profile, error } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("email", email)
+    .maybeSingle();
 
-  if (!isValidReturnToken(token)) {
-    return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+  if (error) {
+    console.error("Profile fetch error:", error);
+    return NextResponse.json({ error: error.message }, { status: 400 });
   }
 
-  const supabase = supabaseServer();
-
-  const expires = new Date();
-  if (plan.endsWith("yearly")) expires.setMonth(expires.getMonth() + 12);
-  else expires.setMonth(expires.getMonth() + 1);
-
-  const { data: profile } = await supabase.from("profiles").select("id").eq("email", email).maybeSingle();
   const user_id = profile?.id ?? null;
 
-  if (user_id) {
-    await supabase
-      .from("subscriptions")
-      .upsert({ user_id, plan, status: "active", expires_at: expires.toISOString() }, { onConflict: "user_id" });
+  if (!user_id) {
+    return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  return NextResponse.json({ ok: true });
+  await supabase.from("claims").insert({
+    user_id,
+    created_at: new Date().toISOString(),
+  });
+
+  return NextResponse.json({ message: "Claim recorded successfully" });
 }
