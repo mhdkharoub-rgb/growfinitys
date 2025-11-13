@@ -1,51 +1,44 @@
-"use client";
-import { useMemo } from "react";
-import { createBrowserSupabaseClient } from "@supabase/auth-helpers-nextjs";
-import { useRouter } from "next/navigation";
+import { redirect } from "next/navigation";
+import type { CSSProperties } from "react";
+import { supabaseServer } from "@/lib/supabaseServer";
 
-export default function Dashboard() {
-  const router = useRouter();
-  const supabase = useMemo(() => {
-    if (typeof window === "undefined") {
-      return null;
-    }
+export const dynamic = "force-dynamic";
 
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+export default async function DashboardPage() {
+  const supabase = supabaseServer();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
 
-    if (!url || !anonKey) {
-      console.warn("Supabase environment variables are not configured.");
-      return null;
-    }
-
-    return createBrowserSupabaseClient({ supabaseUrl: url, supabaseKey: anonKey });
-  }, []);
-
-  async function handleLogout() {
-    if (!supabase) {
-      router.push("/");
-      return;
-    }
-
-    await supabase.auth.signOut();
-    router.push("/");
+  if (!session?.user) {
+    redirect("/login");
   }
 
   return (
-    <main className="min-h-screen bg-black text-white flex flex-col items-center justify-center text-center px-6">
-      <h1 className="text-5xl font-bold text-gold mb-6">Welcome to Growfinitys VIP Dashboard</h1>
-      <p className="text-gray-400 mb-10">You’re logged in. Exclusive signals coming soon!</p>
-      <button
-        onClick={handleLogout}
-        className="bg-gold text-black font-semibold px-8 py-3 rounded-xl hover:bg-goldDark transition"
-      >
-        Logout
-      </button>
-      {!supabase && (
-        <p className="mt-6 text-sm text-gray-500">
-          Supabase is not configured. Please add your project credentials.
-        </p>
-      )}
+    <main style={{ maxWidth: 720, margin: "48px auto", padding: "0 16px" }}>
+      <h1 style={{ fontSize: 28, color: "#d4af37", marginBottom: 8 }}>
+        Growfinitys VIP Dashboard
+      </h1>
+      <p style={{ opacity: 0.85, marginBottom: 24 }}>
+        You’re logged in. Exclusive signals and automation tools will appear here soon.
+      </p>
+
+      <div style={{ display: "flex", gap: 12 }}>
+        <form action="/api/auth/logout" method="post">
+          <button style={btn()}>Log out</button>
+        </form>
+      </div>
     </main>
   );
+}
+
+function btn() {
+  return {
+    background: "#d4af37",
+    color: "#0a0a0a",
+    padding: "10px 16px",
+    borderRadius: 8,
+    border: "1px solid #d4af37",
+    cursor: "pointer",
+  } satisfies CSSProperties;
 }
