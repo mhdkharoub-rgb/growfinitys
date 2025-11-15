@@ -1,39 +1,80 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { requireAdmin } from '@/lib/auth';
-import { generateSignal } from '@/lib/signals';
-import { createSupabaseServerClient } from '@/lib/supabaseServer';
-import { sendSignalEmail } from '@/lib/emails';
+import { NextRequest, NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/auth";
+import { generateSignal, Audience } from "@/lib/signals";
+import { supabaseServer } from "@/lib/supabaseServer";
+import { sendSignalEmail } from "@/lib/emails";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
+
+function validateAudience(value: unknown): value is Audience {
+  return value === "basic" || value === "pro" || value === "vip";
+}
 
 export async function POST(req: NextRequest) {
-  const supabase = supabaseServer();
-  if (!supabase) {
-    return NextResponse.json({ error: 'Supabase is not configured.' }, { status: 500 });
+  try {
+    await requireAdmin();
+
+    const { audience, count } = await req.json();
+
+    if (!validateAudience(audience)) {
+      return NextResponse.json({ success: false, error: "audience must be one of basic, pro, vip" }, { status: 400 });
+    }
+
+    const total = Math.max(1, Math.min(10, Number(count) || 1));
+
+    const supabase = supabaseServer();
+
+    const generated = await Promise.all(
+      Array.from({ length: total }, () => generateSignal(audience))
+    );
+
+    const { error: insertErr } = await supabase.from("signals").insert(generated);
+    if (insertErr) {
+      throw insertErr;
+    }
+
+    const { data: subs, error: subsErr } = await supabase.rpc("active_subscribers_for_audience", {
+      p_audience: audience,
+    });
+    if (subsErr) {
+      throw subsErr;
+    }
+
+    const emails = (subs ?? []).map((row: any) => row.email).filter(Boolean) as string[];
+    if (emails.length) {
+      const subject = `📈 ${generated.length} new ${audience.toUpperCase()} signals`;
+      const html = `
+        <div style="font-family:Inter,Arial,sans-serif;background:#000;color:#f5f5f5;padding:16px;">
+          <h2 style="color:#d4af37;margin-bottom:12px;">Growfinitys Signals Update</h2>
+          <ul style="list-style:none;padding:0;margin:0;">
+            ${generated
+              .map(
+                (sig) => `
+                  <li style="margin-bottom:16px;border:1px solid #333;padding:12px;border-radius:12px;">
+                    <div style="font-weight:600;color:#d4af37;">${sig.title}</div>
+                    <div>${sig.symbol} · ${sig.type}</div>
+                    <div>Entry: ${sig.entry} · SL: ${sig.sl} · TP1: ${sig.tp1}${
+                      sig.tp2 ? ` · TP2: ${sig.tp2}` : ""
+                    }</div>
+                    <div style="color:#aaa;">Risk: ${sig.risk.toUpperCase()}</div>
+                  </li>
+                `
+              )
+              .join("")}
+          </ul>
+        </div>
+      `;
+
+      await Promise.all(emails.map((email) => sendSignalEmail(email, subject, html)));
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: `✅ ${generated.length} new ${audience.toUpperCase()} signals generated and dispatched.`,
+      emailed: emails.length,
+    });
+  } catch (err: any) {
+    console.error("❌ Signal generation failed:", err);
+    return NextResponse.json({ success: false, error: err?.message || String(err) }, { status: 500 });
   }
-
-  const admin = await requireAdmin();
-  if (!admin) return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
-
-  const kind = (new URL(req.url).searchParams.get('kind') ?? 'hourly') as 'hourly' | 'daily' | 'monthly';
-  const sig = generateSignal(kind);
-
-  const { data, error } = await supabase.from('signals').insert(sig).select('*').single();
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  // Email to all active subscribers
-  const { data: subs } = await supabase
-    .from('subscriptions')
-    .select('user_id,expires_at,status,plan,profiles:profiles(email)')
-    .eq('status', 'active');
-
-  const recipients = (subs ?? [])
-    .filter((s) => new Date(s.expires_at) > new Date())
-    .map((s: any) => s.profiles?.email ?? s.email)
-    .filter(Boolean) as string[];
-
-  const html = `<h2>${kind.toUpperCase()} SIGNAL</h2><pre>${JSON.stringify(sig.payload, null, 2)}</pre>`;
-  await Promise.all(recipients.map((e) => sendSignalEmail(e, `New ${kind} signal`, html)));
-
-  return NextResponse.json({ ok: true, data });
 }
