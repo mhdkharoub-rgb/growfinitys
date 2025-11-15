@@ -29,5 +29,10 @@ export async function POST(req: NextRequest) {
       .upsert({ user_id, plan, status: "active", expires_at: expires.toISOString() }, { onConflict: "user_id" });
   }
 
-  return NextResponse.json({ ok: true });
+  await supabase.from("claims").insert({
+    user_id,
+    created_at: new Date().toISOString(),
+  });
+
+  return NextResponse.json({ message: "Claim recorded successfully" });
 }
